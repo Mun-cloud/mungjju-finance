@@ -2,31 +2,40 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { syncWithGoogleDrive } from "../actions";
-import { SpendingList } from "@/types/list";
+import { syncCoupleWithGoogleDrive } from "../actions";
+import { CoupleSpendingList } from "@/types/global";
 
-interface SyncButtonProps {
-  handleFile: (records: SpendingList[]) => void;
+interface CoupleSyncButtonProps {
+  onSyncSuccess: (
+    husbandRecords: CoupleSpendingList[],
+    wifeRecords: CoupleSpendingList[]
+  ) => void;
 }
 
-export default function SyncButton({ handleFile }: SyncButtonProps) {
+export default function CoupleSyncButton({
+  onSyncSuccess,
+}: CoupleSyncButtonProps) {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSync = async () => {
+  const handleCoupleSync = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const { success, spendingList } = await syncWithGoogleDrive();
+      const result = await syncCoupleWithGoogleDrive();
 
-      if (success && spendingList) {
-        handleFile(spendingList);
+      if (result.success && result.husbandRecords && result.wifeRecords) {
+        onSyncSuccess(result.husbandRecords, result.wifeRecords);
+      } else {
+        setError(result.error || "부부 동기화에 실패했습니다.");
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "데이터를 불러오는데 실패했습니다."
+        err instanceof Error
+          ? err.message
+          : "부부 데이터를 불러오는데 실패했습니다."
       );
     } finally {
       setLoading(false);
@@ -73,9 +82,9 @@ export default function SyncButton({ handleFile }: SyncButtonProps) {
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-5 h-5 text-green-600"
+              className="w-5 h-5 text-purple-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -84,30 +93,32 @@ export default function SyncButton({ handleFile }: SyncButtonProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Google Drive 동기화</h3>
-            <p className="text-sm text-gray-500">최신 소비 기록을 가져옵니다</p>
+            <h3 className="font-semibold text-gray-900">부부 동기화</h3>
+            <p className="text-sm text-gray-500">
+              부부의 소비 기록을 함께 가져옵니다
+            </p>
           </div>
         </div>
       </div>
 
       <button
-        onClick={handleSync}
+        onClick={handleCoupleSync}
         disabled={loading}
         className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
           loading
             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            : "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         }`}
       >
         {loading ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>동기화 중...</span>
+            <span>부부 동기화 중...</span>
           </>
         ) : (
           <>
@@ -124,7 +135,7 @@ export default function SyncButton({ handleFile }: SyncButtonProps) {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            <span>동기화 시작</span>
+            <span>부부 동기화 시작</span>
           </>
         )}
       </button>

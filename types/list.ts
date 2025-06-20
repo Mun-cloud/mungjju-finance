@@ -8,7 +8,7 @@ export interface SpendingList {
   s_cate: string;
   category_name: string; // 카테고리
   s_subcate: string;
-  subcategory_name: string; // 서브 카테고리리
+  subcategory_name: string; // 서브 카테고리
   s_price: number; // 소비 금액
   s_cardmonth: string;
   s_ipter: string;
