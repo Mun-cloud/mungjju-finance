@@ -37,13 +37,38 @@ export function createDriveClient(oauth2Client: OAuth2Client) {
 }
 
 /**
+ * 폴더명을 이용해 Google Drive 폴더 ID를 조회하는 함수
+ * @param drive - Google Drive API 클라이언트
+ * @param folderName - 폴더명
+ * @returns 폴더 ID
+ */
+export async function getFolderIdByName(
+  drive: any,
+  folderName: string
+): Promise<string> {
+  const { data } = await drive.files.list({
+    q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}' and trashed = false`,
+    fields: "files(id, name)",
+    pageSize: 1,
+  });
+
+  const folder = data?.files?.[0];
+  if (!folder || !folder.id) {
+    throw new Error(`${folderName} 폴더를 찾을 수 없습니다.`);
+  }
+  return folder.id;
+}
+
+/**
  * Google Drive에서 최신 DB 파일을 찾는 함수
  * @param drive - Google Drive API 클라이언트
- * @param folderId - 폴더 ID (선택사항, 기본값은 환경변수 사용)
  * @returns 최신 DB 파일 정보
  */
-export async function findLatestDbFile(drive: any, folderId?: string) {
-  const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
+export async function findLatestDbFile(drive: any) {
+  const targetFolderId = await getFolderIdByName(
+    drive,
+    process.env.GOOGLE_DRIVE_FOLDER_NAME!
+  );
 
   if (!targetFolderId) {
     throw new Error("GOOGLE_DRIVE_FOLDER_ID 환경 변수가 설정되지 않았습니다.");
@@ -53,12 +78,12 @@ export async function findLatestDbFile(drive: any, folderId?: string) {
     pageSize: 1,
     fields: "files(id)",
     orderBy: "modifiedTime desc",
-    q: `'${targetFolderId}' in parents and name contains '.db'`,
+    q: `'${targetFolderId}' in parents and name contains 'clevmoney_' and trashed = false`,
   });
 
   const latestFile = data?.files?.[0];
   if (!latestFile || !latestFile.id) {
-    throw new Error("Google Drive에서 DB 파일을 찾을 수 없습니다.");
+    throw new Error("Google Drive에서 clevmoney_ 파일을 찾을 수 없습니다.");
   }
 
   return latestFile;

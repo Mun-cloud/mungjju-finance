@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { syncWithGoogleDrive } from "../actions";
 import { SpendingList } from "@/types/list";
+import { useState } from "react";
 
 interface HeaderProps {
   title: string;
@@ -27,12 +28,14 @@ export default function Header({
   showBackButton = false,
 }: HeaderProps) {
   const { data: session } = useSession();
+  const [isSyncing, setIsSyncing] = useState(false);
   const router = useRouter();
 
   /**
    * Google Drive 동기화 실행
    */
   const handleSync = async () => {
+    setIsSyncing(true);
     if (!onSyncSuccess) return;
 
     try {
@@ -44,6 +47,7 @@ export default function Header({
       console.error("동기화 실패:", error);
       alert("동기화에 실패했습니다. 다시 시도해주세요.");
     }
+    setIsSyncing(false);
   };
 
   /**
@@ -85,7 +89,9 @@ export default function Header({
             {showSyncButton && session && (
               <button
                 onClick={handleSync}
-                className="text-blue-500 hover:text-blue-600 transition-colors p-1"
+                className={`text-blue-500 hover:text-blue-600 transition-colors p-1  ${
+                  isSyncing ? "animate-spin-reverse" : ""
+                }`}
                 title="Google Drive 동기화"
               >
                 <svg

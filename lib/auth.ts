@@ -52,6 +52,9 @@ export const authOptions = {
      * 이 정보는 클라이언트에서 서버 액션을 호출할 때 사용됩니다.
      */
     async session({ session, token }: { session: any; token: any }) {
+      console.log("session", session);
+      console.log("token", token);
+
       session.accessToken = token.accessToken;
       session.refreshToken = token.refreshToken;
       return session;

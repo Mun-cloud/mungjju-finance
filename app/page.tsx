@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import SpendingList from "./components/SpendingList";
 import Layout from "./components/Layout";
-import CoupleSyncButton from "./components/CoupleSyncButton";
 import { SpendingList as SpendingListType } from "@/types/list";
 import { CoupleSpendingList } from "@/types/global";
 
@@ -65,22 +64,6 @@ export default function Home() {
     localStorage.setItem("spendingRecords", JSON.stringify(records));
   };
 
-  /**
-   * 부부 동기화 결과를 처리하는 콜백 함수
-   * @param husbandRecords - 남편의 소비 기록
-   * @param wifeRecords - 아내의 소비 기록
-   */
-  const handleCoupleSyncResult = (
-    husbandRecords: CoupleSpendingList[],
-    wifeRecords: CoupleSpendingList[]
-  ) => {
-    setCoupleRecords({ husband: husbandRecords, wife: wifeRecords });
-    localStorage.setItem(
-      "coupleRecords",
-      JSON.stringify({ husband: husbandRecords, wife: wifeRecords })
-    );
-  };
-
   // 총 지출액 계산 (개인 + 부부)
   const totalSpending = spendingRecords.reduce(
     (sum, record) => sum + record.s_price,
@@ -136,9 +119,9 @@ export default function Home() {
   return (
     <Layout title="대시보드" onSyncSuccess={handleSyncResult}>
       {/* 동기화 버튼들 */}
-      <div className="space-y-4 mb-6">
+      {/* <div className="space-y-4 mb-6">
         <CoupleSyncButton onSyncSuccess={handleCoupleSyncResult} />
-      </div>
+      </div> */}
 
       {/* 통계 카드들 */}
       <div className="grid grid-cols-2 gap-2 mb-3">
