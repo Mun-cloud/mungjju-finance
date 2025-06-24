@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { syncWithGoogleDrive } from "../actions";
+import { syncWithGoogleDrive } from "../app/actions";
 import { SpendingList } from "@/types/list";
 
 interface SyncButtonProps {

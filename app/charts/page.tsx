@@ -18,7 +18,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 import { SpendingList as SpendingListType } from "@/types/list";
 
 /**

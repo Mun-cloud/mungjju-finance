@@ -5,6 +5,7 @@ import Header from "./Header";
 import BottomNavigation from "./BottomNavigation";
 import LoginSection from "./LoginSection";
 import { SpendingList } from "@/types/list";
+import DataInitializer from "./DataInitializer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -75,6 +76,8 @@ export default function Layout({
 
       {/* 하단 네비게이션 */}
       {showBottomNav && <BottomNavigation />}
+
+      <DataInitializer />
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SpendingList from "../components/SpendingList";
-import Layout from "../components/Layout";
+import SpendingList from "../../components/SpendingList";
+import Layout from "../../components/Layout";
 import { SpendingList as SpendingListType } from "@/types/list";
 
 /**

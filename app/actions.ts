@@ -14,6 +14,7 @@ import {
   cleanupTempFile,
 } from "@/lib/database";
 import { OAuth2Client } from "google-auth-library";
+import { SpendingList } from "@/types/list";
 
 /**
  * Google Drive와 동기화하여 소비 기록을 가져오는 서버 액션
@@ -81,7 +82,12 @@ export async function syncWithGoogleDrive() {
  * 환경변수에 저장된 두 계정의 토큰을 사용합니다.
  * @returns { success: boolean, husbandSpendingList, wifeSpendingList, error? }
  */
-export async function syncBothGoogleDrives() {
+export async function syncBothGoogleDrives(): Promise<{
+  success: boolean;
+  husbandSpendingList?: SpendingList[];
+  wifeSpendingList?: SpendingList[];
+  error?: string;
+}> {
   try {
     // 남편 계정
     const husbandOAuth2Client = createOAuth2Client(
@@ -92,24 +98,24 @@ export async function syncBothGoogleDrives() {
     const husbandTempDbPath = await getLatestDbFile(husbandOAuth2Client);
 
     // 아내 계정
-    // const wifeOAuth2Client = createOAuth2Client(
-    //   process.env.WIFE_ACCESS_TOKEN!,
-    //   process.env.WIFE_REFRESH_TOKEN
-    // );
-    // const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
+    const wifeOAuth2Client = createOAuth2Client(
+      process.env.WIFE_ACCESS_TOKEN!,
+      process.env.WIFE_REFRESH_TOKEN
+    );
+    const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
 
     // 소비 기록 조회
     const husbandSpendingList = getSpendingRecords(husbandTempDbPath);
-    // const wifeSpendingList = getSpendingRecords(wifeTempDbPath);
+    const wifeSpendingList = getSpendingRecords(wifeTempDbPath);
 
     // 임시 파일 정리
     cleanupTempFile(husbandTempDbPath);
-    // cleanupTempFile(wifeTempDbPath);
+    cleanupTempFile(wifeTempDbPath);
 
     return {
       success: true,
       husbandSpendingList,
-      // wifeSpendingList,
+      wifeSpendingList,
     };
   } catch (error) {
     return {

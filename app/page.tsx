@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SpendingList from "./components/SpendingList";
-import Layout from "./components/Layout";
-import { SpendingList as SpendingListType } from "@/types/list";
-import { CoupleSpendingList } from "@/types/global";
+import SpendingList from "../components/SpendingList";
+import Layout from "../components/Layout";
+import { useSpendingStore } from "@/store/spendingStore";
 
 /**
  * TODO
@@ -25,61 +24,32 @@ import { CoupleSpendingList } from "@/types/global";
  * - 소비 기록 요약 및 통계
  */
 export default function Home() {
-  const [spendingRecords, setSpendingRecords] = useState<SpendingListType[]>(
-    []
-  );
-  const [coupleRecords, setCoupleRecords] = useState<{
-    husband: CoupleSpendingList[];
-    wife: CoupleSpendingList[];
-  }>({ husband: [], wife: [] });
   const [mounted, setMounted] = useState(false);
+
+  // zustand store에서 부부 데이터 가져오기
+  const { total, myRole } = useSpendingStore();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 로컬 스토리지에서 데이터 가져오기
-  useEffect(() => {
-    const storedData = localStorage.getItem("spendingRecords");
-    if (storedData) {
-      const records = JSON.parse(storedData);
-      setSpendingRecords(records);
-    }
+  // // 총 지출액 계산 (개인 + 부부)
+  // const myTotalSpending = useSpendingStore()[myRole].reduce(
+  //   (sum, record) => sum + record.s_price,
+  //   0
+  // );
 
-    // 부부 데이터도 로컬 스토리지에서 가져오기
-    const storedCoupleData = localStorage.getItem("coupleRecords");
-    if (storedCoupleData) {
-      const coupleData = JSON.parse(storedCoupleData);
-      setCoupleRecords(coupleData);
-    }
-  }, []);
-
-  /**
-   * 동기화된 소비 기록을 상태에 저장하는 콜백 함수
-   * @param records - 동기화된 소비 기록 배열
-   */
-  const handleSyncResult = (records: SpendingListType[]) => {
-    setSpendingRecords(records);
-    // 로컬 스토리지에 저장하여 다른 페이지에서도 사용할 수 있도록 함
-    localStorage.setItem("spendingRecords", JSON.stringify(records));
-  };
-
-  // 총 지출액 계산 (개인 + 부부)
-  const totalSpending = spendingRecords.reduce(
-    (sum, record) => sum + record.s_price,
-    0
-  );
-
-  // 부부 총 지출액 계산
-  const coupleTotalSpending =
-    coupleRecords.husband.reduce((sum, record) => sum + record.s_price, 0) +
-    coupleRecords.wife.reduce((sum, record) => sum + record.s_price, 0);
+  // // 부부 총 지출액 계산
+  // const coupleTotalSpending = total.reduce(
+  //   (sum, record) => sum + record.s_price,
+  //   0
+  // );
 
   // 이번 달 지출액 계산
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
-  const thisMonthSpending = spendingRecords
-    .filter((record) => {
+  const myThisMonthSpending = useSpendingStore()
+    [myRole].filter((record) => {
       const recordDate = new Date(record.s_date);
       return (
         recordDate.getMonth() + 1 === currentMonth &&
@@ -89,10 +59,7 @@ export default function Home() {
     .reduce((sum, record) => sum + record.s_price, 0);
 
   // 부부 이번 달 지출액 계산
-  const coupleThisMonthSpending = [
-    ...coupleRecords.husband,
-    ...coupleRecords.wife,
-  ]
+  const coupleThisMonthSpending = total
     .filter((record) => {
       const recordDate = new Date(record.s_date);
       return (
@@ -117,20 +84,15 @@ export default function Home() {
   }
 
   return (
-    <Layout title="대시보드" onSyncSuccess={handleSyncResult}>
-      {/* 동기화 버튼들 */}
-      {/* <div className="space-y-4 mb-6">
-        <CoupleSyncButton onSyncSuccess={handleCoupleSyncResult} />
-      </div> */}
-
+    <Layout title="대시보드">
       {/* 통계 카드들 */}
       <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 mb-1">개인 총 지출</p>
               <p className="text-xl font-bold text-gray-900">
-                {totalSpending.toLocaleString()}원
+                {myTotalSpending.toLocaleString()}원
               </p>
             </div>
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -175,14 +137,14 @@ export default function Home() {
               </svg>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-1">개인 이번 달</p>
+              <p className="text-sm text-gray-500 mb-1">나의 이번 달</p>
               <p className="text-xl font-bold text-gray-900">
-                {thisMonthSpending.toLocaleString()}원
+                {myThisMonthSpending.toLocaleString()}원
               </p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -236,7 +198,7 @@ export default function Home() {
           <h2 className="text-sm font-semibold text-gray-900">최근 지출</h2>
         </div>
         <div className="max-h-96 overflow-y-auto">
-          <SpendingList spendingRecords={spendingRecords.slice(0, 10)} />
+          <SpendingList spendingRecords={total.slice(0, 10)} />
         </div>
       </div>
     </Layout>

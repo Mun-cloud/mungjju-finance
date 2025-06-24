@@ -2,10 +2,9 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
+import { syncBothGoogleDrives } from "../app/actions";
 import { SpendingList } from "@/types/list";
 import { useState } from "react";
-import { syncBothGoogleDrives } from "../actions";
 import { useSpendingStore } from "@/store/spendingStore";
 
 interface HeaderProps {
@@ -26,7 +25,6 @@ interface HeaderProps {
 export default function Header({
   title,
   showSyncButton = true,
-  onSyncSuccess,
   showBackButton = false,
 }: HeaderProps) {
   const { data: session } = useSession();
@@ -38,7 +36,6 @@ export default function Header({
    */
   const handleSync = async () => {
     setIsSyncing(true);
-    if (!onSyncSuccess) return;
 
     try {
       const { success, husbandSpendingList, wifeSpendingList } =
@@ -56,7 +53,6 @@ export default function Header({
         // zustand store 갱신
         useSpendingStore.getState().setHusband(husbandSpendingList);
         useSpendingStore.getState().setWife(wifeSpendingList);
-        onSyncSuccess(husbandSpendingList);
       }
     } catch (error) {
       console.error("동기화 실패:", error);
