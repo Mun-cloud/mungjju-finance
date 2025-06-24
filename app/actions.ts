@@ -105,8 +105,12 @@ export async function syncBothGoogleDrives(): Promise<{
     const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
 
     // 소비 기록 조회
-    const husbandSpendingList = getSpendingRecords(husbandTempDbPath);
-    const wifeSpendingList = getSpendingRecords(wifeTempDbPath);
+    const husbandSpendingList = getSpendingRecords(husbandTempDbPath).map(
+      (value) => ({ ...value, role: "husband" })
+    );
+    const wifeSpendingList = getSpendingRecords(wifeTempDbPath).map(
+      (value) => ({ ...value, role: "wife" })
+    );
 
     // 임시 파일 정리
     cleanupTempFile(husbandTempDbPath);

@@ -26,8 +26,8 @@ export const useSpendingStore = create<SpendingState>(
       const total = [...husband, ...wife];
       total.sort(
         (a, b) =>
-          new Date(b.s_date + b.s_time).getTime() -
-          new Date(a.s_date + a.s_time).getTime()
+          new Date(b.s_date + " " + b.s_time).getTime() -
+          new Date(a.s_date + " " + a.s_time).getTime()
       );
       set({ total });
     },

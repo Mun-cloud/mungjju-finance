@@ -44,12 +44,21 @@ export default function SpendingList({ spendingRecords }: SpendingListProps) {
     <div className="divide-y divide-gray-100">
       {spendingRecords.map((record) => (
         <div
-          key={record._id}
+          key={`${record._id}-${record.s_date}-${record.s_time}`}
           className="px-4 py-4 hover:bg-gray-50 transition-colors duration-150"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    record.role === "husband"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-pink-100 text-pink-800"
+                  }`}
+                >
+                  {record.role === "husband" ? "뭉" : "쭈"}
+                </span>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   {record.category_name}
                 </span>

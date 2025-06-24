@@ -27,7 +27,8 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   // zustand store에서 부부 데이터 가져오기
-  const { total, myRole } = useSpendingStore();
+  const total = useSpendingStore((state) => state.total);
+  const myRole = useSpendingStore((state) => state.myRole);
 
   useEffect(() => {
     setMounted(true);
@@ -48,8 +49,9 @@ export default function Home() {
   // 이번 달 지출액 계산
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
-  const myThisMonthSpending = useSpendingStore()
-    [myRole].filter((record) => {
+  const myList = useSpendingStore((state) => state[myRole]);
+  const myThisMonthSpending = myList
+    .filter((record) => {
       const recordDate = new Date(record.s_date);
       return (
         recordDate.getMonth() + 1 === currentMonth &&

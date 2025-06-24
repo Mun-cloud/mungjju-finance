@@ -13,4 +13,5 @@ export interface SpendingList {
   s_cardmonth: string;
   s_ipter: string;
   s_oraw: string;
+  role: string;
 }

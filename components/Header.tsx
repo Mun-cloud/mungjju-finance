@@ -40,6 +40,7 @@ export default function Header({
     try {
       const { success, husbandSpendingList, wifeSpendingList } =
         await syncBothGoogleDrives();
+
       if (success && husbandSpendingList && wifeSpendingList) {
         // localStorage에 저장
         localStorage.setItem(

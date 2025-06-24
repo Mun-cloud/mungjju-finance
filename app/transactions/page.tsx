@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import SpendingList from "../../components/SpendingList";
 import Layout from "../../components/Layout";
-import { SpendingList as SpendingListType } from "@/types/list";
+import { useSpendingStore } from "@/store/spendingStore";
 
 /**
  * 지출기록 페이지 컴포넌트
@@ -13,12 +13,7 @@ import { SpendingList as SpendingListType } from "@/types/list";
  */
 export default function TransactionsPage() {
   const router = useRouter();
-  const [spendingRecords, setSpendingRecords] = useState<SpendingListType[]>(
-    []
-  );
-  const [filteredRecords, setFilteredRecords] = useState<SpendingListType[]>(
-    []
-  );
+  const total = useSpendingStore((state) => state.total);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
@@ -26,69 +21,62 @@ export default function TransactionsPage() {
     setMounted(true);
   }, []);
 
-  // 로컬 스토리지에서 데이터 가져오기
-  useEffect(() => {
-    const storedData = localStorage.getItem("spendingRecords");
-    if (storedData) {
-      const records = JSON.parse(storedData);
-      setSpendingRecords(records);
-
-      // 현재 월을 기본값으로 설정
-      const currentDate = new Date();
-      const currentMonth = `${currentDate.getFullYear()}-${String(
-        currentDate.getMonth() + 1
-      ).padStart(2, "0")}`;
-      setSelectedMonth(currentMonth);
-    }
-  }, []);
-
-  // 월별 필터링
-  useEffect(() => {
+  const filteredRecords = useMemo(() => {
     if (!selectedMonth) {
-      setFilteredRecords([]);
-      return;
+      return [];
     }
-
-    const filtered = spendingRecords.filter((record) => {
+    return total.filter((record) => {
       const recordDate = new Date(record.s_date);
+      // 날짜가 유효하지 않으면 필터에서 제외
+      if (isNaN(recordDate.getTime())) return false;
+
       const recordMonth = `${recordDate.getFullYear()}-${String(
         recordDate.getMonth() + 1
       ).padStart(2, "0")}`;
       return recordMonth === selectedMonth;
     });
-
-    setFilteredRecords(filtered);
-  }, [selectedMonth, spendingRecords]);
+  }, [total, selectedMonth]);
 
   // 사용 가능한 월 목록 생성
   const availableMonths = Array.from(
     new Set(
-      spendingRecords.map((record) => {
-        const date = new Date(record.s_date);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-          2,
-          "0"
-        )}`;
-      })
+      total
+        .map((record) => {
+          const date = new Date(record.s_date);
+          if (isNaN(date.getTime())) return null; // 유효하지 않은 날짜는 제외
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}`;
+        })
+        .filter((month) => month !== null) // null(=invalid date) 제거
     )
   )
     .sort()
     .reverse();
+
+  // 이번 달(YYYY-MM) 구하기
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}`;
+
+  // selectedMonth를 이번 달로 초기화
+  useEffect(() => {
+    if (availableMonths.length > 0) {
+      // 이번 달이 있으면 그걸로, 없으면 가장 최근 달로
+      setSelectedMonth(
+        availableMonths.includes(thisMonth) ? thisMonth : availableMonths[0]
+      );
+    }
+  }, [availableMonths.length]);
 
   // 월별 총 지출액 계산
   const monthlyTotal = filteredRecords.reduce(
     (sum, record) => sum + record.s_price,
     0
   );
-
-  /**
-   * 동기화된 소비 기록을 상태에 저장하는 콜백 함수
-   * @param records - 동기화된 소비 기록 배열
-   */
-  const handleSyncResult = (records: SpendingListType[]) => {
-    setSpendingRecords(records);
-    localStorage.setItem("spendingRecords", JSON.stringify(records));
-  };
 
   // 하이드레이션 완료 전까지 로딩 표시
   if (!mounted) {
@@ -105,11 +93,7 @@ export default function TransactionsPage() {
   }
 
   return (
-    <Layout
-      title="지출기록"
-      onSyncSuccess={handleSyncResult}
-      showBackButton={true}
-    >
+    <Layout title="지출기록" showBackButton={true}>
       {/* 월별 필터 */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
         <div className="flex items-center justify-between mb-3">
@@ -122,13 +106,14 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-3 justify-between">
           <select
             value={selectedMonth}
+            defaultValue={availableMonths[0]}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {availableMonths.map((month) => {
               const [year, monthNum] = month.split("-");
               return (
-                <option key={month} value={month}>
+                <option key={year + month} value={month}>
                   {year}년 {monthNum}월
                 </option>
               );
@@ -155,7 +140,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* 데이터가 없는 경우 안내 */}
-      {spendingRecords.length === 0 && (
+      {total.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg

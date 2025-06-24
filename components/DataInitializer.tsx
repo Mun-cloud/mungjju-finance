@@ -4,7 +4,10 @@ import { useEffect } from "react";
 
 const DataInitializer = () => {
   const session = useSession();
-  const { setTotal, wife, husband, setMyRole } = useSpendingStore();
+  const setTotal = useSpendingStore((state) => state.setTotal);
+  const wife = useSpendingStore((state) => state.wife);
+  const husband = useSpendingStore((state) => state.husband);
+  const setMyRole = useSpendingStore((state) => state.setMyRole);
 
   useEffect(() => {
     if (session.data?.user?.email === "mun05170@gmail.com") {
