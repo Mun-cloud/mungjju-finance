@@ -94,6 +94,7 @@ export async function syncBothGoogleDrives(): Promise<{
       process.env.HUSBAND_ACCESS_TOKEN!,
       process.env.HUSBAND_REFRESH_TOKEN
     );
+    console.log("husbandOAuth2Client", husbandOAuth2Client);
 
     const husbandTempDbPath = await getLatestDbFile(husbandOAuth2Client);
 
@@ -103,7 +104,6 @@ export async function syncBothGoogleDrives(): Promise<{
       process.env.WIFE_REFRESH_TOKEN
     );
     const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
-
     console.log("wifeOAuth2Client", wifeOAuth2Client);
     // console.log("husbandOAuth2Client", husbandOAuth2Client);
 
