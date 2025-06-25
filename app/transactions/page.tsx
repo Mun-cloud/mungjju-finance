@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
+
 import SpendingList from "../../components/SpendingList";
 import Layout from "../../components/Layout";
 import { useSpendingStore } from "@/store/spendingStore";
+import useMount from "@/hooks/useMount";
+import MonthSelector from "./_components/MonthSelector";
+import NoTransaction from "./_components/NoTransaction";
 
 /**
  * 지출기록 페이지 컴포넌트
@@ -12,14 +15,9 @@ import { useSpendingStore } from "@/store/spendingStore";
  * 모든 지출 기록을 월별로 필터링하여 볼 수 있는 페이지입니다.
  */
 export default function TransactionsPage() {
-  const router = useRouter();
   const total = useSpendingStore((state) => state.total);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMount();
 
   const filteredRecords = useMemo(() => {
     if (!selectedMonth) {
@@ -36,66 +34,6 @@ export default function TransactionsPage() {
       return recordMonth === selectedMonth;
     });
   }, [total, selectedMonth]);
-
-  // 사용 가능한 월 목록 생성
-  const availableMonths = Array.from(
-    new Set(
-      total
-        .map((record) => {
-          const date = new Date(record.s_date);
-          if (isNaN(date.getTime())) return null; // 유효하지 않은 날짜는 제외
-          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}`;
-        })
-        .filter((month) => month !== null) // null(=invalid date) 제거
-    )
-  )
-    .sort()
-    .reverse();
-
-  // 이번 달(YYYY-MM) 구하기
-  const now = new Date();
-  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}`;
-
-  // selectedMonth를 이번 달로 초기화
-  useEffect(() => {
-    if (availableMonths.length > 0) {
-      // 이번 달이 있으면 그걸로, 없으면 가장 최근 달로
-      setSelectedMonth(
-        availableMonths.includes(thisMonth) ? thisMonth : availableMonths[0]
-      );
-    }
-  }, [availableMonths.length]);
-
-  // 월별 총 지출액 계산
-  const monthlyTotal = filteredRecords.reduce(
-    (sum, record) => sum + record.s_price,
-    0
-  );
-
-  // 이전 월로 이동
-  const goToPreviousMonth = () => {
-    const currentIndex = availableMonths.indexOf(selectedMonth);
-    if (currentIndex < availableMonths.length - 1) {
-      setSelectedMonth(availableMonths[currentIndex + 1]);
-    }
-  };
-
-  // 다음 월로 이동
-  const goToNextMonth = () => {
-    const currentIndex = availableMonths.indexOf(selectedMonth);
-    if (currentIndex > 0) {
-      setSelectedMonth(availableMonths[currentIndex - 1]);
-    }
-  };
-
-  // 현재 선택된 월의 인덱스
-  const currentMonthIndex = availableMonths.indexOf(selectedMonth);
 
   // 하이드레이션 완료 전까지 로딩 표시
   if (!mounted) {
@@ -114,73 +52,11 @@ export default function TransactionsPage() {
   return (
     <Layout title="지출기록" showBackButton={true}>
       {/* 월별 필터 */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
-        <div className="flex items-center gap-3 justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={goToPreviousMonth}
-              disabled={currentMonthIndex >= availableMonths.length - 1}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {availableMonths.map((month) => {
-                const [year, monthNum] = month.split("-");
-                return (
-                  <option key={year + month} value={month}>
-                    {year}년 {monthNum}월
-                  </option>
-                );
-              })}
-            </select>
-
-            <button
-              onClick={goToNextMonth}
-              disabled={currentMonthIndex <= 0}
-              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="text-right">
-            <p className="text-sm text-gray-500">총 지출</p>
-            <p className="text-lg font-bold text-gray-900">
-              {monthlyTotal.toLocaleString()}원
-            </p>
-          </div>
-        </div>
-      </div>
+      <MonthSelector
+        records={filteredRecords}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+      />
 
       {/* 지출 기록 목록 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden grow">
@@ -193,37 +69,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* 데이터가 없는 경우 안내 */}
-      {total.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-          </div>
-          <p className="text-gray-500 font-medium mb-2">
-            동기화된 데이터가 없습니다
-          </p>
-          <p className="text-sm text-gray-400">
-            대시보드에서 Google Drive와 동기화해주세요
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            대시보드로 이동
-          </button>
-        </div>
-      )}
+      {total.length === 0 && <NoTransaction />}
     </Layout>
   );
 }
