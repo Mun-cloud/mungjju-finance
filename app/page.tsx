@@ -3,8 +3,8 @@
 import SpendingList from "../components/SpendingList";
 import Layout from "../components/Layout";
 import { useSpendingStore } from "@/store/spendingStore";
-import SyncIcon from "@/assets/icons/sync.svg";
 import DashboardHeartIcon from "@/assets/icons/dashboard-heart.svg";
+import DashboardCalendarIcon from "@/assets/icons/dashboard-calendar.svg";
 import { calculateThisMonthSpending } from "@/lib/calculator";
 import useMount from "@/hooks/useMount";
 
@@ -64,7 +64,7 @@ export default function Home() {
               </p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <SyncIcon className="w-5 h-5 text-blue-600" />
+              <DashboardCalendarIcon className="w-5 h-5 text-blue-600" />
             </div>
           </div>
         </div>
