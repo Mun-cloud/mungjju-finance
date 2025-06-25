@@ -104,8 +104,8 @@ export async function syncBothGoogleDrives(): Promise<{
     );
     const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
 
-    console.log("husbandOAuth2Client", husbandOAuth2Client);
     console.log("wifeOAuth2Client", wifeOAuth2Client);
+    // console.log("husbandOAuth2Client", husbandOAuth2Client);
 
     // 소비 기록 조회
     const husbandSpendingList = getSpendingRecords(husbandTempDbPath).map(
@@ -125,6 +125,8 @@ export async function syncBothGoogleDrives(): Promise<{
       wifeSpendingList,
     };
   } catch (error) {
+    console.error("Google Drive 동기화 중 오류 발생:", error);
+
     return {
       success: false,
       error:

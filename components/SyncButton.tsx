@@ -18,6 +18,9 @@ export default function SyncButton() {
       const { success, husbandSpendingList, wifeSpendingList } =
         await syncBothGoogleDrives();
 
+      console.log("husbandSpendingList", husbandSpendingList);
+      console.log("wifeSpendingList", wifeSpendingList);
+
       if (success && husbandSpendingList && wifeSpendingList) {
         // localStorage에 저장
         localStorage.setItem(
