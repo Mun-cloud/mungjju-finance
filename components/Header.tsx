@@ -2,10 +2,10 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { syncBothGoogleDrives } from "../app/actions";
 import { SpendingList } from "@/types/list";
-import { useState } from "react";
-import { useSpendingStore } from "@/store/spendingStore";
+import ArrowLeftIcon from "@/assets/icons/arrow-left.svg";
+import LogoutIcon from "@/assets/icons/logout.svg";
+import SyncButton from "./SyncButton";
 
 interface HeaderProps {
   title: string;
@@ -28,39 +28,8 @@ export default function Header({
   showBackButton = false,
 }: HeaderProps) {
   const { data: session } = useSession();
-  const [isSyncing, setIsSyncing] = useState(false);
+
   const router = useRouter();
-
-  /**
-   * Google Drive 동기화 실행
-   */
-  const handleSync = async () => {
-    setIsSyncing(true);
-
-    try {
-      const { success, husbandSpendingList, wifeSpendingList } =
-        await syncBothGoogleDrives();
-
-      if (success && husbandSpendingList && wifeSpendingList) {
-        // localStorage에 저장
-        localStorage.setItem(
-          "husbandSpendingList",
-          JSON.stringify(husbandSpendingList)
-        );
-        localStorage.setItem(
-          "wifeSpendingList",
-          JSON.stringify(wifeSpendingList)
-        );
-        // zustand store 갱신
-        useSpendingStore.getState().setHusband(husbandSpendingList);
-        useSpendingStore.getState().setWife(wifeSpendingList);
-      }
-    } catch (error) {
-      console.error("동기화 실패:", error);
-      alert("동기화에 실패했습니다. 다시 시도해주세요.");
-    }
-    setIsSyncing(false);
-  };
 
   /**
    * 뒤로가기 처리
@@ -79,48 +48,14 @@ export default function Header({
                 onClick={handleBack}
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
+                <ArrowLeftIcon className="w-5 h-5" />
               </button>
             )}
             <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
           </div>
 
           <div className="flex items-center gap-2">
-            {showSyncButton && session && (
-              <button
-                onClick={handleSync}
-                className={`text-blue-500 hover:text-blue-600 transition-colors p-1  ${
-                  isSyncing ? "animate-spin-reverse" : ""
-                }`}
-                title="Google Drive 동기화"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
-            )}
+            {showSyncButton && session && <SyncButton />}
 
             {session && (
               <button
@@ -128,19 +63,7 @@ export default function Header({
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 title="로그아웃"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
+                <LogoutIcon className="w-5 h-5" />
               </button>
             )}
           </div>

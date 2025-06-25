@@ -60,24 +60,26 @@ export default function Layout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* 헤더 */}
-      <Header
-        title={title}
-        showSyncButton={showSyncButton}
-        onSyncSuccess={onSyncSuccess}
-        showBackButton={showBackButton}
-      />
+    <>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+        {/* 헤더 */}
+        <Header
+          title={title}
+          showSyncButton={showSyncButton}
+          onSyncSuccess={onSyncSuccess}
+          showBackButton={showBackButton}
+        />
 
-      {/* 메인 콘텐츠 */}
-      <div className={`grow ${showBottomNav ? "pb-16" : ""}`}>
-        <main className="max-w-md mx-auto px-4 py-6">{children}</main>
+        {/* 메인 콘텐츠 */}
+        <div className={`grow ${showBottomNav ? "pb-16" : ""}`}>
+          <main className="max-w-md mx-auto px-4 py-6">{children}</main>
+        </div>
+
+        {/* 하단 네비게이션 */}
+        {showBottomNav && <BottomNavigation />}
       </div>
 
-      {/* 하단 네비게이션 */}
-      {showBottomNav && <BottomNavigation />}
-
       <DataInitializer />
-    </div>
+    </>
   );
 }

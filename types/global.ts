@@ -55,3 +55,15 @@ export interface CoupleSpendingList extends SpendingList {
   isShared?: boolean; // 공동 지출 여부
   sharedAmount?: number; // 공동 지출 금액
 }
+
+/**
+ * 지출 아이템
+ */
+export interface SpendingItem {
+  id: string;
+  date: string;
+  category: string;
+  description: string;
+  amount: number;
+  sharedAmount?: number; // 공동 지출 금액
+}
