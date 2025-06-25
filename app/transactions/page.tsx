@@ -139,7 +139,6 @@ export default function TransactionsPage() {
 
             <select
               value={selectedMonth}
-              defaultValue={availableMonths[0]}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
