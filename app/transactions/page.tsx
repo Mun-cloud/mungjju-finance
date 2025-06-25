@@ -78,6 +78,25 @@ export default function TransactionsPage() {
     0
   );
 
+  // 이전 월로 이동
+  const goToPreviousMonth = () => {
+    const currentIndex = availableMonths.indexOf(selectedMonth);
+    if (currentIndex < availableMonths.length - 1) {
+      setSelectedMonth(availableMonths[currentIndex + 1]);
+    }
+  };
+
+  // 다음 월로 이동
+  const goToNextMonth = () => {
+    const currentIndex = availableMonths.indexOf(selectedMonth);
+    if (currentIndex > 0) {
+      setSelectedMonth(availableMonths[currentIndex - 1]);
+    }
+  };
+
+  // 현재 선택된 월의 인덱스
+  const currentMonthIndex = availableMonths.indexOf(selectedMonth);
+
   // 하이드레이션 완료 전까지 로딩 표시
   if (!mounted) {
     return (
@@ -95,30 +114,65 @@ export default function TransactionsPage() {
   return (
     <Layout title="지출기록" showBackButton={true}>
       {/* 월별 필터 */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">월별 필터</h2>
-          <span className="text-sm text-gray-500">
-            총 {filteredRecords.length}건
-          </span>
-        </div>
-
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
         <div className="flex items-center gap-3 justify-between">
-          <select
-            value={selectedMonth}
-            defaultValue={availableMonths[0]}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {availableMonths.map((month) => {
-              const [year, monthNum] = month.split("-");
-              return (
-                <option key={year + month} value={month}>
-                  {year}년 {monthNum}월
-                </option>
-              );
-            })}
-          </select>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goToPreviousMonth}
+              disabled={currentMonthIndex >= availableMonths.length - 1}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <select
+              value={selectedMonth}
+              defaultValue={availableMonths[0]}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {availableMonths.map((month) => {
+                const [year, monthNum] = month.split("-");
+                return (
+                  <option key={year + month} value={month}>
+                    {year}년 {monthNum}월
+                  </option>
+                );
+              })}
+            </select>
+
+            <button
+              onClick={goToNextMonth}
+              disabled={currentMonthIndex <= 0}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
 
           <div className="text-right">
             <p className="text-sm text-gray-500">총 지출</p>
