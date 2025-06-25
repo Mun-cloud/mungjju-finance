@@ -5,6 +5,29 @@ import { tmpdir } from "os";
 import { SpendingList } from "@/types/list";
 
 /**
+ * 카테고리 이름을 정규화하는 함수
+ * @param categoryName - 원본 카테고리 이름
+ * @returns 정규화된 카테고리 이름
+ */
+function normalizeCategoryName(categoryName: string): string {
+  const categoryMap: Record<string, string> = {
+    "🍟식비": "식비",
+    "🚌교통비": "교통비",
+    "🌿생활비": "생활비",
+    "🩷데이트비": "데이트비",
+    "🐳공과금": "공과금",
+    "💸보험비": "보험비",
+    "🍒용돈(쇼핑)": "용돈",
+    "💪건강(운동)": "건강",
+    "🐶가족": "가족",
+    "💌기타(경조사비)": "가족",
+    "💰여행": "여행",
+  };
+
+  return categoryMap[categoryName] || categoryName;
+}
+
+/**
  * 데이터베이스의 모든 테이블 스키마를 확인하는 함수
  * @param dbPath - 데이터베이스 파일 경로
  */
@@ -16,15 +39,10 @@ export function inspectDatabaseSchema(dbPath: string) {
     const tables = db
       .prepare("SELECT name FROM sqlite_master WHERE type='table'")
       .all();
-    console.log("=== 데이터베이스 테이블 목록 ===");
-    console.log(tables);
 
     // 각 테이블의 스키마 확인
     for (const table of tables) {
       const tableName = (table as any).name;
-      const schema = db.prepare(`PRAGMA table_info(${tableName})`).all();
-      console.log(`\n=== ${tableName} 테이블 스키마 ===`);
-      console.log(JSON.stringify(schema, null, 2));
 
       // 각 테이블의 샘플 데이터 확인 (최대 5개)
       try {
@@ -52,13 +70,6 @@ export function getSpendingRecords(dbPath: string): SpendingList[] {
   const db = new Database(dbPath);
 
   try {
-    // 먼저 데이터베이스 스키마 확인
-    inspectDatabaseSchema(dbPath);
-
-    // 카테고리 테이블 스키마 확인 (디버깅용)
-    const catelistSchema = db.prepare("PRAGMA table_info(catelist)").all();
-    console.log("Catelist schema:", JSON.stringify(catelistSchema, null, 2));
-
     // 소비 기록 조회 쿼리
     const spendingList = db
       .prepare(
@@ -86,7 +97,11 @@ export function getSpendingRecords(dbPath: string): SpendingList[] {
       )
       .all() as SpendingList[];
 
-    return spendingList;
+    // 카테고리 이름 정규화
+    return spendingList.map((record) => ({
+      ...record,
+      category_name: normalizeCategoryName(record.category_name || "미정"),
+    }));
   } finally {
     db.close();
   }
