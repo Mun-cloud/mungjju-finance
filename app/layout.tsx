@@ -14,8 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Google Drive SQLite Downloader",
-  description: "Download SQLite files from Google Drive",
+  title: "뭉쭈가계부",
 };
 
 export default function RootLayout({
