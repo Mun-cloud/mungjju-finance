@@ -189,35 +189,58 @@ export default function Home() {
           {expandedSections.has("couple-chart") && (
             <div className="px-4 pb-4">
               {thisMonthCategoryData.couple.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={thisMonthCategoryData.couple}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      isAnimationActive={false}
-                    >
-                      {thisMonthCategoryData.couple.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={thisMonthCategoryData.couple}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        isAnimationActive={false}
+                      >
+                        {thisMonthCategoryData.couple.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) =>
+                          `${Number(value).toLocaleString()}원`
+                        }
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* 카테고리별 리스트 추가 */}
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                    {thisMonthCategoryData.couple
+                      .sort((a, b) => b.value - a.value)
+                      .slice(0, 6)
+                      .map((item, index) => (
+                        <div
+                          key={item.name}
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor: COLORS[index % COLORS.length],
+                            }}
+                          />
+                          <span className="truncate text-gray-900 font-medium">
+                            {item.name}
+                          </span>
+                          <span className="font-bold text-gray-900">
+                            {item.value.toLocaleString()}원
+                          </span>
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) =>
-                        `${Number(value).toLocaleString()}원`
-                      }
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   이번달 지출 데이터가 없습니다
@@ -276,10 +299,6 @@ export default function Home() {
                                 data={roleData}
                                 cx="50%"
                                 cy="50%"
-                                labelLine={false}
-                                label={({ name, percent }) =>
-                                  `${name} ${(percent * 100).toFixed(0)}%`
-                                }
                                 outerRadius={80}
                                 fill="#8884d8"
                                 dataKey="value"
@@ -299,6 +318,32 @@ export default function Home() {
                               />
                             </PieChart>
                           </ResponsiveContainer>
+                          {/* 카테고리별 리스트 추가 */}
+                          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                            {roleData
+                              .sort((a, b) => b.value - a.value)
+                              .slice(0, 6)
+                              .map((item, index) => (
+                                <div
+                                  key={item.name}
+                                  className="flex items-center gap-2"
+                                >
+                                  <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{
+                                      backgroundColor:
+                                        COLORS[index % COLORS.length],
+                                    }}
+                                  />
+                                  <span className="truncate text-gray-900 font-medium">
+                                    {item.name}
+                                  </span>
+                                  <span className="font-bold text-gray-900">
+                                    {item.value.toLocaleString()}원
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       );
                     }
