@@ -24,6 +24,7 @@ export const authOptions = {
             "https://www.googleapis.com/auth/userinfo.email", // 사용자 이메일 정보
           ].join(" "),
           access_type: "offline", // 리프레시 토큰 요청
+          prompt: "consent",
         },
       },
     }),
