@@ -12,73 +12,56 @@ import {
   saveArrayBufferToFile,
   cleanupTempFile,
 } from "@/lib/database";
-import { OAuth2Client } from "google-auth-library";
-import { SpendingList } from "@/types/list";
+import { getCurrentSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { USER_ROLE_MAP } from "@/lib/constants";
+import { Spending } from "@prisma/client";
 
-/**
- * 남편, 아내 두 계정의 Google Drive에서 각각 최신 clevmoney_*** 파일을 조회하여 소비 기록을 반환하는 서버 액션
- * 환경변수에 저장된 두 계정의 토큰을 사용합니다.
- * @returns { success: boolean, husbandSpendingList, wifeSpendingList, error? }
- */
-export async function syncBothGoogleDrives(): Promise<{
-  success: boolean;
-  husbandSpendingList?: SpendingList[];
-  wifeSpendingList?: SpendingList[];
-  error?: string;
-}> {
-  try {
-    // 남편 계정
-    const husbandOAuth2Client = createOAuth2Client(
-      process.env.HUSBAND_ACCESS_TOKEN!,
-      process.env.HUSBAND_REFRESH_TOKEN
-    );
-
-    const husbandTempDbPath = await getLatestDbFile(husbandOAuth2Client);
-
-    // 아내 계정
-    const wifeOAuth2Client = createOAuth2Client(
-      process.env.WIFE_ACCESS_TOKEN!,
-      process.env.WIFE_REFRESH_TOKEN
-    );
-    const wifeTempDbPath = await getLatestDbFile(wifeOAuth2Client);
-
-    // 소비 기록 조회
-    const husbandSpendingList = getSpendingRecords(husbandTempDbPath).map(
-      (value) => ({ ...value, role: "husband" })
-    );
-    const wifeSpendingList = getSpendingRecords(wifeTempDbPath).map(
-      (value) => ({ ...value, role: "wife" })
-    );
-
-    // 임시 파일 정리
-    cleanupTempFile(husbandTempDbPath);
-    cleanupTempFile(wifeTempDbPath);
-
-    return {
-      success: true,
-      husbandSpendingList,
-      wifeSpendingList,
-    };
-  } catch (error) {
-    console.error("Google Drive 동기화 중 오류 발생:", error);
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.",
-    };
+export async function syncMyGoogleDriveAndSaveToDB() {
+  const session = await getCurrentSession();
+  if (!session?.user?.email) {
+    throw new Error("로그인 필요");
   }
-}
 
-async function getLatestDbFile(client: OAuth2Client) {
-  const drive = createDriveClient(client);
-  const fileId = await findLatestDbFile(drive);
-  const fileData = await downloadFile(drive, fileId.id);
+  const userEmail = session.user.email;
+  const role =
+    USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP] ?? "unknown";
 
+  // 1. 구글 드라이브에서 최신 db 파일 조회
+  const oAuth2Client = createOAuth2Client(
+    session.accessToken,
+    session.refreshToken
+  );
+  const drive = createDriveClient(oAuth2Client);
+  const file = await findLatestDbFile(drive);
+  const fileData = await downloadFile(drive, file.id);
+
+  // 2. 임시 파일로 저장 후 파싱
   const tempDbPath = createTempDbPath();
   saveArrayBufferToFile(fileData, tempDbPath);
+  const spendingList: Spending[] = getSpendingRecords(tempDbPath).map(
+    (item) => ({
+      id: item._id,
+      amount: item.s_price,
+      category: item.category_name,
+      subCategory: item.subcategory_name,
+      where: item.s_where,
+      date: new Date(item.s_date + " " + item.s_time),
+      createdAt: new Date(),
+      memo: item.s_memo,
+      userEmail,
+      role,
+    })
+  );
+  cleanupTempFile(tempDbPath);
 
-  return tempDbPath;
+  // 3. 기존 spending 삭제 후 새로 저장
+  await prisma.spending.deleteMany({ where: { userEmail } });
+  await prisma.spending.createMany({ data: spendingList });
+
+  return { success: true };
+}
+
+export async function fetchSpendingList() {
+  return await prisma.spending.findMany();
 }

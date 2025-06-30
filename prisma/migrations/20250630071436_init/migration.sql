@@ -7,6 +7,8 @@ CREATE TABLE "Spending" (
     "date" TIMESTAMP(3) NOT NULL,
     "memo" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userEmail" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
 
     CONSTRAINT "Spending_pkey" PRIMARY KEY ("id")
 );

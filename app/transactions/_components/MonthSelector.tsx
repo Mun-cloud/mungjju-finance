@@ -1,5 +1,6 @@
 import { useSpendingStore } from "@/store/spendingStore";
-import { SpendingList } from "@/types/list";
+import { Spending } from "@prisma/client";
+
 import { useEffect, useMemo } from "react";
 
 const MonthSelector = ({
@@ -7,11 +8,11 @@ const MonthSelector = ({
   selectedMonth,
   setSelectedMonth,
 }: {
-  records: SpendingList[];
+  records: Spending[];
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
 }) => {
-  const total = useSpendingStore((state) => state.total);
+  const total = useSpendingStore((state) => state.spendingList);
   // 이번 달(YYYY-MM) 구하기
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -20,7 +21,7 @@ const MonthSelector = ({
   )}`;
 
   // 월별 총 지출액 계산
-  const monthlyTotal = records.reduce((sum, record) => sum + record.s_price, 0);
+  const monthlyTotal = records.reduce((sum, record) => sum + record.amount, 0);
 
   // 사용 가능한 월 목록 생성
   const availableMonths = useMemo(
@@ -29,7 +30,7 @@ const MonthSelector = ({
         new Set(
           total
             .map((record) => {
-              const date = new Date(record.s_date);
+              const date = new Date(record.date);
               if (isNaN(date.getTime())) return null; // 유효하지 않은 날짜는 제외
               return `${date.getFullYear()}-${String(
                 date.getMonth() + 1

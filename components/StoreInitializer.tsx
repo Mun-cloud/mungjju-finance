@@ -1,13 +1,16 @@
+"use client";
+
+import { fetchSpendingList } from "@/app/actions";
 import { useSpendingStore } from "@/store/spendingStore";
 import { useSession } from "next-auth/react";
+
 import { useEffect } from "react";
 
-const DataInitializer = () => {
+const StoreInitializer = () => {
   const session = useSession();
-  const setTotal = useSpendingStore((state) => state.setTotal);
-  const wife = useSpendingStore((state) => state.wife);
-  const husband = useSpendingStore((state) => state.husband);
+
   const setMyRole = useSpendingStore((state) => state.setMyRole);
+  const setSpendingList = useSpendingStore((state) => state.setSpendingList);
 
   useEffect(() => {
     if (session.data?.user?.email === "mun05170@gmail.com") {
@@ -18,15 +21,15 @@ const DataInitializer = () => {
   }, [session.data?.user?.email, setMyRole]);
 
   useEffect(() => {
-    setTotal(husband, wife);
-  }, [setTotal, wife, husband]);
-
-  // 앱 최초 진입 시 zustand store를 localStorage에서 불러오기
-  useEffect(() => {
-    useSpendingStore.getState().loadFromStorage();
-  }, []);
-
+    async function load() {
+      const spendingList = await fetchSpendingList();
+      if (spendingList) {
+        setSpendingList(spendingList);
+      }
+    }
+    load();
+  }, [setSpendingList]);
   return null;
 };
 
-export default DataInitializer;
+export default StoreInitializer;

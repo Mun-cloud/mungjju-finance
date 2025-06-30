@@ -15,7 +15,7 @@ import NoTransaction from "./_components/NoTransaction";
  * 모든 지출 기록을 월별로 필터링하여 볼 수 있는 페이지입니다.
  */
 export default function TransactionsPage() {
-  const total = useSpendingStore((state) => state.total);
+  const spendingList = useSpendingStore((state) => state.spendingList);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const mounted = useMount();
 
@@ -23,8 +23,8 @@ export default function TransactionsPage() {
     if (!selectedMonth) {
       return [];
     }
-    return total.filter((record) => {
-      const recordDate = new Date(record.s_date);
+    return spendingList.filter((record) => {
+      const recordDate = new Date(record.date);
       // 날짜가 유효하지 않으면 필터에서 제외
       if (isNaN(recordDate.getTime())) return false;
 
@@ -33,7 +33,7 @@ export default function TransactionsPage() {
       ).padStart(2, "0")}`;
       return recordMonth === selectedMonth;
     });
-  }, [total, selectedMonth]);
+  }, [spendingList, selectedMonth]);
 
   // 하이드레이션 완료 전까지 로딩 표시
   if (!mounted) {
@@ -69,7 +69,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* 데이터가 없는 경우 안내 */}
-      {total.length === 0 && <NoTransaction />}
+      {spendingList.length === 0 && <NoTransaction />}
     </Layout>
   );
 }

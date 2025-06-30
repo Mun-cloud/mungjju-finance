@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { syncBothGoogleDrives } from "../app/actions";
-import { useSpendingStore } from "@/store/spendingStore";
+import { syncMyGoogleDriveAndSaveToDB } from "../app/actions";
 import SyncIcon from "@/assets/icons/sync.svg";
 
 export default function SyncButton() {
@@ -15,25 +14,11 @@ export default function SyncButton() {
     setIsSyncing(true);
 
     try {
-      const { success, husbandSpendingList, wifeSpendingList } =
-        await syncBothGoogleDrives();
-
-      console.log("husbandSpendingList", husbandSpendingList);
-      console.log("wifeSpendingList", wifeSpendingList);
-
-      if (success && husbandSpendingList && wifeSpendingList) {
-        // localStorage에 저장
-        localStorage.setItem(
-          "husbandSpendingList",
-          JSON.stringify(husbandSpendingList)
-        );
-        localStorage.setItem(
-          "wifeSpendingList",
-          JSON.stringify(wifeSpendingList)
-        );
-        // zustand store 갱신
-        useSpendingStore.getState().setHusband(husbandSpendingList);
-        useSpendingStore.getState().setWife(wifeSpendingList);
+      const { success } = await syncMyGoogleDriveAndSaveToDB();
+      if (success) {
+        alert("동기화가 완료되었습니다!");
+      } else {
+        alert("동기화에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
       console.error("동기화 실패:", error);

@@ -13,6 +13,7 @@
     "@prisma/client": "^6.10.1",
     "@react-oauth/google": "^0.12.1",
     "better-sqlite3": "^11.10.0",
+    "dayjs": "^1.11.13",
     "googleapis": "^148.0.0",
     "next": "15.2.4",
     "next-auth": "^4.24.11",

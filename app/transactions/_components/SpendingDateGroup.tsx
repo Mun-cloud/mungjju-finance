@@ -1,17 +1,17 @@
-import { SpendingList as SpendingListType } from "@/types/list";
 import { useSpendingFiltersStore } from "@/store/spendingFiltersStore";
 import SpendingItem from "./SpendingItem";
+import { Spending } from "@prisma/client";
 
 interface SpendingDateGroupProps {
   date: string;
-  records: SpendingListType[];
+  records: Spending[];
 }
 
 const SpendingDateGroup = ({ date, records }: SpendingDateGroupProps) => {
   const { expandedDates, toggleDate } = useSpendingFiltersStore();
 
   const isExpanded = expandedDates.has(date);
-  const dateTotal = records.reduce((sum, record) => sum + record.s_price, 0);
+  const dateTotal = records.reduce((sum, record) => sum + record.amount, 0);
 
   // 날짜 포맷팅 (예: 2024-01-15 → 1월 15일)
   const formatDate = (dateString: string) => {
@@ -83,10 +83,7 @@ const SpendingDateGroup = ({ date, records }: SpendingDateGroupProps) => {
       {isExpanded && (
         <div className="border-t border-gray-100 bg-gray-50">
           {records.map((record) => (
-            <SpendingItem
-              key={`${record._id}-${record.s_date}-${record.s_time}`}
-              record={record}
-            />
+            <SpendingItem key={`${record.id}-${record.date}`} record={record} />
           ))}
         </div>
       )}

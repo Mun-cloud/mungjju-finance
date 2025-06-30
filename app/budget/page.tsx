@@ -28,7 +28,7 @@ function getCurrentMonth() {
 }
 
 export default function BudgetPage() {
-  const total = useSpendingStore((state) => state.total);
+  const total = useSpendingStore((state) => state.spendingList);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 
   // 예산에 포함된 카테고리 목록(기타 제외)
@@ -41,16 +41,16 @@ export default function BudgetPage() {
     const result: Record<string, number> = {};
     let etcSum = 0;
     total.forEach((record) => {
-      const recordDate = new Date(record.s_date);
+      const recordDate = new Date(record.date);
       const recordMonth = `${recordDate.getFullYear()}-${String(
         recordDate.getMonth() + 1
       ).padStart(2, "0")}`;
       if (recordMonth === selectedMonth) {
-        if (budgetCategories.includes(record.category_name)) {
-          if (!result[record.category_name]) result[record.category_name] = 0;
-          result[record.category_name] += record.s_price;
+        if (budgetCategories.includes(record.category)) {
+          if (!result[record.category]) result[record.category] = 0;
+          result[record.category] += record.amount;
         } else {
-          etcSum += record.s_price;
+          etcSum += record.amount;
         }
       }
     });

@@ -1,8 +1,9 @@
+import { Spending } from "@prisma/client";
+import dayjs from "dayjs";
 import React from "react";
-import { SpendingList } from "@/types/list";
 
 interface RecentSpendingListProps {
-  total: SpendingList[];
+  total: Spending[];
 }
 
 export default function RecentSpendingList({ total }: RecentSpendingListProps) {
@@ -14,7 +15,7 @@ export default function RecentSpendingList({ total }: RecentSpendingListProps) {
       <div className="divide-y divide-gray-100">
         {total.slice(0, 10).map((record) => (
           <div
-            key={`${record._id}-${record.s_date}-${record.s_time}`}
+            key={`${record.id}-${record.date}`}
             className="px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
           >
             <div className="flex items-start justify-between">
@@ -30,20 +31,20 @@ export default function RecentSpendingList({ total }: RecentSpendingListProps) {
                     {record.role === "husband" ? "뭉" : "쭈"}
                   </span>
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {record.category_name}
+                    {record.category}
                   </span>
-                  {record.subcategory_name && (
+                  {record.subCategory && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {record.subcategory_name}
+                      {record.subCategory}
                     </span>
                   )}
                 </div>
                 <h3 className="text-sm font-medium text-gray-900 truncate">
-                  {record.s_where}
+                  {record.where}
                 </h3>
-                {record.s_memo && (
+                {record.memo && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                    {record.s_memo}
+                    {record.memo}
                   </p>
                 )}
                 <div className="flex items-center gap-4 mt-2">
@@ -62,8 +63,8 @@ export default function RecentSpendingList({ total }: RecentSpendingListProps) {
                       />
                     </svg>
                     <span>
-                      {new Date(record.s_date).getMonth() + 1}월{" "}
-                      {new Date(record.s_date).getDate()}일
+                      {new Date(record.date).getMonth() + 1}월{" "}
+                      {new Date(record.date).getDate()}일
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -80,13 +81,13 @@ export default function RecentSpendingList({ total }: RecentSpendingListProps) {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span>{record.s_time}</span>
+                    <span>{dayjs(record.date).format("HH:mm")}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right ml-4">
                 <p className="text-sm font-semibold text-gray-900">
-                  {record.s_price.toLocaleString()}원
+                  {record.amount.toLocaleString()}원
                 </p>
               </div>
             </div>

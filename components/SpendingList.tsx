@@ -1,12 +1,12 @@
 import SpendingListFilterSection from "@/app/transactions/_components/SpendingListFilterSection";
 import SpendingListContent from "@/app/transactions/_components/SpendingListContent";
 import EmptySpendingList from "@/app/transactions/_components/EmptySpendingList";
-import { SpendingList as SpendingListType } from "@/types/list";
 import { useSpendingFiltersStore } from "@/store/spendingFiltersStore";
 import { useEffect } from "react";
+import { Spending } from "@prisma/client";
 
 interface SpendingListProps {
-  spendingRecords: SpendingListType[];
+  spendingRecords: Spending[];
 }
 
 /**

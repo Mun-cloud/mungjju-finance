@@ -1,17 +1,18 @@
+import { Spending } from "@prisma/client";
 import { create } from "zustand";
-import { SpendingList as SpendingListType } from "@/types/list";
+import dayjs from "dayjs";
 
 interface SpendingFiltersState {
   // 상태
   selectedRole: string;
   selectedCategory: string;
   expandedDates: Set<string>;
-  spendingRecords: SpendingListType[];
+  spendingRecords: Spending[];
 
   // 액션
   setSelectedRole: (role: string) => void;
   setSelectedCategory: (category: string) => void;
-  setSpendingRecords: (records: SpendingListType[]) => void;
+  setSpendingRecords: (records: Spending[]) => void;
   expandAll: () => void;
   collapseAll: () => void;
   resetFilters: () => void;
@@ -19,8 +20,8 @@ interface SpendingFiltersState {
 
   // 계산된 값들을 반환하는 함수들
   getAvailableCategories: () => string[];
-  getFilteredRecords: () => SpendingListType[];
-  getGroupedRecords: () => { [key: string]: SpendingListType[] };
+  getFilteredRecords: () => Spending[];
+  getGroupedRecords: () => { [key: string]: Spending[] };
   getTotalFilteredAmount: () => number;
 }
 
@@ -38,7 +39,7 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
     setSelectedCategory: (category: string) =>
       set({ selectedCategory: category }),
 
-    setSpendingRecords: (records: SpendingListType[]) =>
+    setSpendingRecords: (records: Spending[]) =>
       set({ spendingRecords: records }),
 
     expandAll: () => {
@@ -72,8 +73,8 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
       const { spendingRecords } = get();
       const categories = new Set<string>();
       spendingRecords.forEach((record) => {
-        if (record.category_name) {
-          categories.add(record.category_name);
+        if (record.category) {
+          categories.add(record.category);
         }
       });
       return Array.from(categories).sort();
@@ -85,8 +86,7 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
         const roleMatch =
           selectedRole === "all" || record.role === selectedRole;
         const categoryMatch =
-          selectedCategory === "all" ||
-          record.category_name === selectedCategory;
+          selectedCategory === "all" || record.category === selectedCategory;
         return roleMatch && categoryMatch;
       });
     },
@@ -94,10 +94,11 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
     getGroupedRecords: () => {
       const { getFilteredRecords } = get();
       const filteredRecords = getFilteredRecords();
-      const groups: { [key: string]: SpendingListType[] } = {};
+      const groups: { [key: string]: Spending[] } = {};
 
       filteredRecords.forEach((record) => {
-        const date = record.s_date;
+        const date = dayjs(record.date).format("YYYY-MM-DD");
+
         if (!groups[date]) {
           groups[date] = [];
         }
@@ -113,13 +114,13 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
         .reduce((acc, [date, records]) => {
           acc[date] = records;
           return acc;
-        }, {} as { [key: string]: SpendingListType[] });
+        }, {} as { [key: string]: Spending[] });
     },
 
     getTotalFilteredAmount: () => {
       const { getFilteredRecords } = get();
       const filteredRecords = getFilteredRecords();
-      return filteredRecords.reduce((sum, record) => sum + record.s_price, 0);
+      return filteredRecords.reduce((sum, record) => sum + record.amount, 0);
     },
   })
 );

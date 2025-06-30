@@ -4,14 +4,14 @@ import { useSession } from "next-auth/react";
 import Header from "./Header";
 import BottomNavigation from "./BottomNavigation";
 import LoginSection from "./LoginSection";
-import { SpendingList } from "@/types/list";
-import DataInitializer from "./DataInitializer";
+import { Spending } from "@prisma/client";
+import StoreInitializer from "./StoreInitializer";
 
 interface LayoutProps {
   children: React.ReactNode;
   title: string;
   showSyncButton?: boolean;
-  onSyncSuccess?: (records: SpendingList[]) => void;
+  onSyncSuccess?: (records: Spending[]) => void;
   showBackButton?: boolean;
   showBottomNav?: boolean;
 }
@@ -77,9 +77,9 @@ export default function Layout({
 
         {/* 하단 네비게이션 */}
         {showBottomNav && <BottomNavigation />}
-      </div>
 
-      <DataInitializer />
+        <StoreInitializer />
+      </div>
     </>
   );
 }

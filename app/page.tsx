@@ -33,21 +33,23 @@ export default function Home() {
     new Set()
   );
 
-  // zustand store에서 부부 데이터 가져오기
-  const total = useSpendingStore((state) => state.total);
+  // zustand store에서 데이터 가져오기
+  const spendingList = useSpendingStore((state) => state.spendingList);
   const myRole = useSpendingStore((state) => state.myRole);
-  const myList = useSpendingStore((state) => state[myRole]);
+
+  // 내 지출만 필터링
+  const myList = spendingList.filter((item) => item.role === myRole);
 
   const myThisMonthSpending = calculateThisMonthSpending(myList);
-  const coupleThisMonthSpending = calculateThisMonthSpending(total);
+  const coupleThisMonthSpending = calculateThisMonthSpending(spendingList);
 
   // 이번달 카테고리별 지출 데이터 계산
   const thisMonthCategoryData = (() => {
     const currentMonth = new Date().getMonth() + 1;
     const currentYear = new Date().getFullYear();
 
-    const thisMonthRecords = total.filter((record) => {
-      const recordDate = new Date(record.s_date);
+    const thisMonthRecords = spendingList.filter((record) => {
+      const recordDate = new Date(record.date);
       return (
         recordDate.getMonth() + 1 === currentMonth &&
         recordDate.getFullYear() === currentYear
@@ -56,17 +58,17 @@ export default function Home() {
 
     // 부부 합산 카테고리별 지출
     const coupleCategorySpending = thisMonthRecords.reduce((acc, record) => {
-      const category = record.category_name;
+      const category = record.category;
       if (!acc[category]) {
         acc[category] = 0;
       }
-      acc[category] += record.s_price;
+      acc[category] += record.amount;
       return acc;
     }, {} as Record<string, number>);
 
     // 개인별 카테고리별 지출
     const personalCategorySpending = thisMonthRecords.reduce((acc, record) => {
-      const category = record.category_name;
+      const category = record.category;
       const role = record.role;
       if (!acc[role]) {
         acc[role] = {};
@@ -74,14 +76,14 @@ export default function Home() {
       if (!acc[role][category]) {
         acc[role][category] = 0;
       }
-      acc[role][category] += record.s_price;
+      acc[role][category] += record.amount;
       return acc;
     }, {} as Record<string, Record<string, number>>);
 
     return {
       couple: Object.entries(coupleCategorySpending).map(([name, value]) => ({
         name,
-        value,
+        value: value as number,
       })),
       personal: personalCategorySpending,
     };
@@ -150,7 +152,7 @@ export default function Home() {
       </div>
 
       {/* 최근 지출 기록 (아코디언 없이 10개만) */}
-      <RecentSpendingList total={total} />
+      <RecentSpendingList total={spendingList} />
     </Layout>
   );
 }

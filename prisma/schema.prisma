@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -16,10 +15,13 @@ datasource db {
 
 model Spending {
   id        Int      @id @default(autoincrement())
-  userId    String
   amount    Int
   category  String
+  subCategory String?
   date      DateTime
+  where     String?
   memo      String?
   createdAt DateTime @default(now())
+  userEmail String
+  role      String
 }

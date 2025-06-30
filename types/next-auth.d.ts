@@ -3,12 +3,11 @@ declare module "next-auth" {
     accessToken?: string;
     refreshToken?: string;
     user?: {
-      id: string;
-      name: string;
-      email: string;
+      id?: string;
+      name?: string;
+      email?: string;
       image?: string;
-      role?: "husband" | "wife"; // 부부 역할 구분
-      partnerId?: string; // 파트너의 사용자 ID
+      role?: string; // string으로 확장
     };
   }
 
@@ -16,12 +15,11 @@ declare module "next-auth" {
     accessToken?: string;
     refreshToken?: string;
     user?: {
-      id: string;
-      name: string;
-      email: string;
+      id?: string;
+      name?: string;
+      email?: string;
       image?: string;
-      role?: "husband" | "wife";
-      partnerId?: string;
+      role?: string;
     };
   }
 }
