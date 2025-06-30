@@ -18,8 +18,11 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-require-imports": "off",
     },
-    ignorePatterns: [
+    ignores: [
       "lib/generated/**", // generated 폴더 전체 무시
+      "*.config.js",
+      "node_modules/**",
+      ".next/**",
     ],
   },
 ];

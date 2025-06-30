@@ -18,7 +18,7 @@ model Spending {
   amount    Int
   category  String
   subCategory String?
-  date      DateTime
+  date      DateTime?
   where     String?
   memo      String?
   createdAt DateTime @default(now())

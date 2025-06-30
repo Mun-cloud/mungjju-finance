@@ -40,18 +40,26 @@ export async function syncMyGoogleDriveAndSaveToDB() {
   const tempDbPath = createTempDbPath();
   saveArrayBufferToFile(fileData, tempDbPath);
   const spendingList: Spending[] = getSpendingRecords(tempDbPath).map(
-    (item) => ({
-      id: item._id,
-      amount: item.s_price,
-      category: item.category_name,
-      subCategory: item.subcategory_name,
-      where: item.s_where,
-      date: new Date(item.s_date + " " + item.s_time),
-      createdAt: new Date(),
-      memo: item.s_memo,
-      userEmail,
-      role,
-    })
+    (item) => {
+      let date: Date | null = null;
+      const dateString = new Date(item.s_date + " " + item.s_time);
+
+      if (!isNaN(dateString.getTime())) {
+        date = dateString;
+      }
+      return {
+        id: item._id,
+        amount: item.s_price,
+        category: item.category_name,
+        subCategory: item.subcategory_name,
+        where: item.s_where,
+        date,
+        createdAt: new Date(),
+        memo: item.s_memo,
+        userEmail,
+        role,
+      };
+    }
   );
   cleanupTempFile(tempDbPath);
 
