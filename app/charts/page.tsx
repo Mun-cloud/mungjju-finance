@@ -51,15 +51,6 @@ export default function ChartsPage() {
     }
   }, []);
 
-  /**
-   * 동기화된 소비 기록을 상태에 저장하는 콜백 함수
-   * @param records - 동기화된 소비 기록 배열
-   */
-  const handleSyncResult = (records: SpendingListType[]) => {
-    setSpendingRecords(records);
-    localStorage.setItem("spendingRecords", JSON.stringify(records));
-  };
-
   // 1. 카테고리별 지출 분포 데이터
   const categoryData = spendingRecords
     .reduce((acc, record) => {
@@ -175,11 +166,7 @@ export default function ChartsPage() {
   }
 
   return (
-    <Layout
-      title="차트 분석"
-      onSyncSuccess={handleSyncResult}
-      showBackButton={true}
-    >
+    <Layout title="차트 분석" showBackButton={true}>
       <div className="space-y-6">
         {/* 데이터가 없는 경우 안내 */}
         {spendingRecords.length === 0 ? (

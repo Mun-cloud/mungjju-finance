@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { SpendingList } from "@/types/list";
 import ArrowLeftIcon from "@/assets/icons/arrow-left.svg";
 import LogoutIcon from "@/assets/icons/logout.svg";
 import SyncButton from "./SyncButton";
@@ -10,7 +9,6 @@ import SyncButton from "./SyncButton";
 interface HeaderProps {
   title: string;
   showSyncButton?: boolean;
-  onSyncSuccess?: (records: SpendingList[]) => void;
   showBackButton?: boolean;
 }
 
@@ -19,7 +17,6 @@ interface HeaderProps {
  *
  * @param title - 헤더에 표시할 제목
  * @param showSyncButton - 동기화 버튼 표시 여부 (기본값: true)
- * @param onSyncSuccess - 동기화 성공 시 호출할 콜백 함수
  * @param showBackButton - 뒤로가기 버튼 표시 여부 (기본값: false)
  */
 export default function Header({

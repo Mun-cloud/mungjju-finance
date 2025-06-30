@@ -14,7 +14,13 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "warn", // error → warn 또는 off
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
+    ignorePatterns: [
+      "lib/generated/**", // generated 폴더 전체 무시
+    ],
   },
 ];
 

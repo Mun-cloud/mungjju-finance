@@ -30,7 +30,6 @@ export default function Layout({
   children,
   title,
   showSyncButton = true,
-  onSyncSuccess,
   showBackButton = false,
   showBottomNav = true,
 }: LayoutProps) {
@@ -66,7 +65,6 @@ export default function Layout({
         <Header
           title={title}
           showSyncButton={showSyncButton}
-          onSyncSuccess={onSyncSuccess}
           showBackButton={showBackButton}
         />
 
