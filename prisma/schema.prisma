@@ -14,7 +14,7 @@ datasource db {
 }
 
 model Spending {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   amount    Int
   category  String
   subCategory String?

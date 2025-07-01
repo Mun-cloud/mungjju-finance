@@ -51,19 +51,15 @@ export async function syncMyGoogleDriveAndSaveToDB() {
       tempDbPath = createTempDbPath();
       saveArrayBufferToFile(fileData, tempDbPath);
       spendingList = getSpendingRecords(tempDbPath).map((item) => {
-        let date: Date | null = null;
-        const dateString = new Date(item.s_date + " " + item.s_time);
+        const date = new Date(item.s_date + " " + item.s_time);
 
-        if (!isNaN(dateString.getTime())) {
-          date = dateString;
-        }
         return {
-          id: item._id,
+          id: `${item._id}-${date.getTime()}-${item.s_price}`,
           amount: item.s_price,
           category: item.category_name,
           subCategory: item.subcategory_name,
           where: item.s_where,
-          date,
+          date: !isNaN(date.getTime()) ? date : null,
           createdAt: new Date(),
           memo: item.s_memo,
           userEmail,
