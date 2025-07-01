@@ -41,41 +41,47 @@ export default function CoupleCategoryTable({
       {expanded && (
         <div className="px-4 pb-4">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    카테고리
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    금액
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    비율
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data
-                  .sort((a, b) => b.value - a.value)
-                  .map((item) => (
-                    <tr key={item.name} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {item.name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                        {item.value.toLocaleString()}원
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 text-right">
-                        {total > 0
-                          ? ((item.value / total) * 100).toFixed(1)
-                          : 0}
-                        %
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            {Object.keys(data).length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                이번달 지출 데이터가 없습니다
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      카테고리
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      금액
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      비율
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {data
+                    .sort((a, b) => b.value - a.value)
+                    .map((item) => (
+                      <tr key={item.name} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          {item.name}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                          {item.value.toLocaleString()}원
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500 text-right">
+                          {total > 0
+                            ? ((item.value / total) * 100).toFixed(1)
+                            : 0}
+                          %
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       )}

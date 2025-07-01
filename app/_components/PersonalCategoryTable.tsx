@@ -39,6 +39,11 @@ export default function PersonalCategoryTable({
       {expanded && (
         <div className="px-4 pb-4">
           <div className="overflow-x-auto">
+            {Object.keys(data).length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                이번달 지출 데이터가 없습니다
+              </div>
+            )}
             {Object.entries(data).map(([role, categories]) => {
               const roleTotal = Object.values(categories).reduce(
                 (sum, amount) => sum + amount,
