@@ -1,5 +1,10 @@
 import { Spending } from "@prisma/client";
 import { create } from "zustand";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface SpendingState {
   isLoading: boolean;
@@ -18,7 +23,12 @@ export const useSpendingStore = create<SpendingState>(
     setIsLoading: (isLoading: boolean) => set({ isLoading }),
     setMyRole: (role: "husband" | "wife") => set({ myRole: role }),
     setSpendingList: (spendingList: Spending[]) => {
-      set({ spendingList });
+      console.log(spendingList);
+      const convertedList = spendingList.map((item) => ({
+        ...item,
+        date: item.date ? dayjs.utc(item.date).tz("Asia/Seoul").toDate() : null,
+      }));
+      set({ spendingList: convertedList });
     },
   })
 );

@@ -18,7 +18,9 @@ import { USER_ROLE_MAP } from "@/lib/constants";
 import { Spending } from "@prisma/client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export async function syncMyGoogleDriveAndSaveToDB() {
   try {
@@ -54,12 +56,16 @@ export async function syncMyGoogleDriveAndSaveToDB() {
       tempDbPath = createTempDbPath();
       saveArrayBufferToFile(fileData, tempDbPath);
       spendingList = getSpendingRecords(tempDbPath).map((item) => {
-        // KST로 저장된 값을 dayjs로 파싱 후 UTC로 변환
-        const kstDate = dayjs(
+        // KST로 저장된 값을 KST로 파싱 후 UTC로 변환
+        const kstDate = dayjs.tz(
           item.s_date + " " + item.s_time,
-          "YYYY-MM-DD HH:mm:ss"
+          "YYYY-MM-DD HH:mm:ss",
+          "Asia/Seoul"
         );
+
+        console.log(kstDate.format("YYYY-MM-DD HH:mm:ss"));
         const utcDate = kstDate.isValid() ? kstDate.utc() : null;
+        console.log(utcDate?.format("YYYY-MM-DD HH:mm:ss"));
 
         return {
           id: `${item._id}-${kstDate.valueOf()}-${item.s_price}`,
