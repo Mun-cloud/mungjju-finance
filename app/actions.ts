@@ -36,6 +36,10 @@ export async function syncMyGoogleDriveAndSaveToDB() {
     const role =
       USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP] ?? "unknown";
 
+    if (!USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP]) {
+      throw new Error("허용되지 않은 계정입니다");
+    }
+
     // 1. 구글 드라이브에서 최신 db 파일 조회
     try {
       const oAuth2Client = createOAuth2Client(
