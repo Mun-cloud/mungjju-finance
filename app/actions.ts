@@ -28,10 +28,7 @@ export async function syncMyGoogleDriveAndSaveToDB() {
     USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP] ?? "unknown";
 
   // 1. 구글 드라이브에서 최신 db 파일 조회
-  const oAuth2Client = createOAuth2Client(
-    session.accessToken,
-    session.refreshToken
-  );
+  const oAuth2Client = createOAuth2Client(session.accessToken);
   const drive = createDriveClient(oAuth2Client);
   const file = await findLatestDbFile(drive);
   const fileData = await downloadFile(drive, file.id);
