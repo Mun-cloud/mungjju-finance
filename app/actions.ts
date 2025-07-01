@@ -16,6 +16,9 @@ import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { USER_ROLE_MAP } from "@/lib/constants";
 import { Spending } from "@prisma/client";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 
 export async function syncMyGoogleDriveAndSaveToDB() {
   try {
@@ -51,15 +54,20 @@ export async function syncMyGoogleDriveAndSaveToDB() {
       tempDbPath = createTempDbPath();
       saveArrayBufferToFile(fileData, tempDbPath);
       spendingList = getSpendingRecords(tempDbPath).map((item) => {
-        const date = new Date(item.s_date + " " + item.s_time);
+        // KST로 저장된 값을 dayjs로 파싱 후 UTC로 변환
+        const kstDate = dayjs(
+          item.s_date + " " + item.s_time,
+          "YYYY-MM-DD HH:mm:ss"
+        );
+        const utcDate = kstDate.isValid() ? kstDate.utc() : null;
 
         return {
-          id: `${item._id}-${date.getTime()}-${item.s_price}`,
+          id: `${item._id}-${kstDate.valueOf()}-${item.s_price}`,
           amount: item.s_price,
           category: item.category_name,
           subCategory: item.subcategory_name,
           where: item.s_where,
-          date: !isNaN(date.getTime()) ? date : null,
+          date: utcDate ? utcDate.toDate() : null,
           createdAt: new Date(),
           memo: item.s_memo,
           userEmail,
