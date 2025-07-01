@@ -108,5 +108,9 @@ export async function syncMyGoogleDriveAndSaveToDB() {
 }
 
 export async function fetchSpendingList() {
-  return await prisma.spending.findMany();
+  return await prisma.spending.findMany({
+    orderBy: {
+      date: "desc",
+    },
+  });
 }
