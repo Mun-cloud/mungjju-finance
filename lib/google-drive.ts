@@ -7,7 +7,10 @@ import { OAuth2Client } from "google-auth-library";
  * @param refreshToken - 리프레시 토큰
  * @returns OAuth2 클라이언트
  */
-export function createOAuth2Client(accessToken: string): OAuth2Client {
+export function createOAuth2Client(
+  accessToken: string,
+  refreshToken?: string
+): OAuth2Client {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
@@ -15,6 +18,7 @@ export function createOAuth2Client(accessToken: string): OAuth2Client {
 
   oauth2Client.setCredentials({
     access_token: accessToken,
+    refresh_token: refreshToken,
   });
 
   return oauth2Client;

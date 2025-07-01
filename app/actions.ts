@@ -18,53 +18,81 @@ import { USER_ROLE_MAP } from "@/lib/constants";
 import { Spending } from "@prisma/client";
 
 export async function syncMyGoogleDriveAndSaveToDB() {
-  const session = await getCurrentSession();
-  if (!session?.user?.email) {
-    throw new Error("로그인 필요");
-  }
+  try {
+    const session = await getCurrentSession();
+    let fileData: ArrayBuffer;
+    let spendingList: Spending[] = [];
 
-  const userEmail = session.user.email;
-  const role =
-    USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP] ?? "unknown";
-
-  // 1. 구글 드라이브에서 최신 db 파일 조회
-  const oAuth2Client = createOAuth2Client(session.accessToken);
-  const drive = createDriveClient(oAuth2Client);
-  const file = await findLatestDbFile(drive);
-  const fileData = await downloadFile(drive, file.id);
-
-  // 2. 임시 파일로 저장 후 파싱
-  const tempDbPath = createTempDbPath();
-  saveArrayBufferToFile(fileData, tempDbPath);
-  const spendingList: Spending[] = getSpendingRecords(tempDbPath).map(
-    (item) => {
-      let date: Date | null = null;
-      const dateString = new Date(item.s_date + " " + item.s_time);
-
-      if (!isNaN(dateString.getTime())) {
-        date = dateString;
-      }
-      return {
-        id: item._id,
-        amount: item.s_price,
-        category: item.category_name,
-        subCategory: item.subcategory_name,
-        where: item.s_where,
-        date,
-        createdAt: new Date(),
-        memo: item.s_memo,
-        userEmail,
-        role,
-      };
+    if (!session?.user?.email) {
+      throw new Error("로그인 필요");
     }
-  );
-  cleanupTempFile(tempDbPath);
 
-  // 3. 기존 spending 삭제 후 새로 저장
-  await prisma.spending.deleteMany({ where: { userEmail } });
-  await prisma.spending.createMany({ data: spendingList });
+    const userEmail = session.user.email;
+    const role =
+      USER_ROLE_MAP[userEmail as keyof typeof USER_ROLE_MAP] ?? "unknown";
 
-  return { success: true };
+    // 1. 구글 드라이브에서 최신 db 파일 조회
+    try {
+      const oAuth2Client = createOAuth2Client(
+        session.accessToken,
+        session.refreshToken
+      );
+      const drive = createDriveClient(oAuth2Client);
+      const file = await findLatestDbFile(drive);
+      fileData = await downloadFile(drive, file.id);
+    } catch (error) {
+      console.error("구글 드라이브 연동 중 오류 발생:", error);
+      throw new Error("구글 드라이브 연동 실패");
+    }
+
+    // 2. 임시 파일로 저장 후 파싱
+    let tempDbPath;
+    try {
+      tempDbPath = createTempDbPath();
+      saveArrayBufferToFile(fileData, tempDbPath);
+      spendingList = getSpendingRecords(tempDbPath).map((item) => {
+        let date: Date | null = null;
+        const dateString = new Date(item.s_date + " " + item.s_time);
+
+        if (!isNaN(dateString.getTime())) {
+          date = dateString;
+        }
+        return {
+          id: item._id,
+          amount: item.s_price,
+          category: item.category_name,
+          subCategory: item.subcategory_name,
+          where: item.s_where,
+          date,
+          createdAt: new Date(),
+          memo: item.s_memo,
+          userEmail,
+          role,
+        };
+      });
+    } catch (error) {
+      console.error("데이터 파싱 중 오류 발생:", error);
+      throw new Error("데이터 파싱 실패");
+    } finally {
+      if (tempDbPath) {
+        cleanupTempFile(tempDbPath);
+      }
+    }
+
+    // 3. 기존 spending 삭제 후 새로 저장
+    try {
+      await prisma.spending.deleteMany({ where: { userEmail } });
+      await prisma.spending.createMany({ data: spendingList });
+    } catch (error) {
+      console.error("DB 저장 중 오류 발생:", error);
+      throw new Error("DB 저장 실패");
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("전체 동기화 프로세스 실패:", error);
+    return { success: false, error };
+  }
 }
 
 export async function fetchSpendingList() {
