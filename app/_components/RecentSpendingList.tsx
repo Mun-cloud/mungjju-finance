@@ -1,19 +1,24 @@
-import { Spending } from "@prisma/client";
+import { useSpendingStore } from "@/store/spendingStore";
+
 import dayjs from "dayjs";
 import React from "react";
 
-interface RecentSpendingListProps {
-  total: Spending[];
-}
+export default function RecentSpendingList() {
+  const spendingList = useSpendingStore((state) => state.spendingList);
+  const isLoading = useSpendingStore((state) => state.isLoading);
 
-export default function RecentSpendingList({ total }: RecentSpendingListProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100">
         <h2 className="text-lg font-semibold text-gray-900">최근 지출</h2>
       </div>
       <div className="divide-y divide-gray-100">
-        {total.slice(0, 10).map((record) => (
+        {isLoading && (
+          <div className="px-4 py-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+          </div>
+        )}
+        {spendingList.slice(0, 10).map((record) => (
           <div
             key={`${record.id}-${record.date}`}
             className="px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
@@ -94,7 +99,7 @@ export default function RecentSpendingList({ total }: RecentSpendingListProps) {
           </div>
         ))}
       </div>
-      {total.length === 0 && (
+      {spendingList.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg

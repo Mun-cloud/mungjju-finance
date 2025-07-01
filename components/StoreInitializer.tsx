@@ -11,6 +11,7 @@ const StoreInitializer = () => {
 
   const setMyRole = useSpendingStore((state) => state.setMyRole);
   const setSpendingList = useSpendingStore((state) => state.setSpendingList);
+  const setIsLoading = useSpendingStore((state) => state.setIsLoading);
 
   useEffect(() => {
     if (session.data?.user?.email === "mun05170@gmail.com") {
@@ -22,13 +23,15 @@ const StoreInitializer = () => {
 
   useEffect(() => {
     async function load() {
+      setIsLoading(true);
       const spendingList = await fetchSpendingList();
       if (spendingList) {
         setSpendingList(spendingList);
       }
+      setIsLoading(false);
     }
     load();
-  }, [setSpendingList]);
+  }, [setSpendingList, setIsLoading]);
   return null;
 };
 

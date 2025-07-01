@@ -152,7 +152,7 @@ export default function Home() {
       </div>
 
       {/* 최근 지출 기록 (아코디언 없이 10개만) */}
-      <RecentSpendingList total={spendingList} />
+      <RecentSpendingList />
     </Layout>
   );
 }
