@@ -23,12 +23,7 @@ export const useSpendingStore = create<SpendingState>(
     setIsLoading: (isLoading: boolean) => set({ isLoading }),
     setMyRole: (role: "husband" | "wife") => set({ myRole: role }),
     setSpendingList: (spendingList: Spending[]) => {
-      console.log(spendingList);
-      const convertedList = spendingList.map((item) => ({
-        ...item,
-        date: item.date ? dayjs.utc(item.date).tz("Asia/Seoul").toDate() : null,
-      }));
-      set({ spendingList: convertedList });
+      set({ spendingList });
     },
   })
 );

@@ -67,9 +67,7 @@ export async function syncMyGoogleDriveAndSaveToDB() {
           "Asia/Seoul"
         );
 
-        console.log(kstDate.format("YYYY-MM-DD HH:mm:ss"));
         const utcDate = kstDate.isValid() ? kstDate.utc() : null;
-        console.log(utcDate?.format("YYYY-MM-DD HH:mm:ss"));
 
         return {
           id: `${item._id}-${kstDate.valueOf()}-${item.s_price}`,
