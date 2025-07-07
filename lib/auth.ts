@@ -40,7 +40,7 @@ export const authOptions = {
     async jwt({ token, account }: { token: any; account: any }) {
       if (account) {
         token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
+        token.refreshToken = account.refresh_token || token.refreshToken;
       }
       return token;
     },
@@ -53,7 +53,7 @@ export const authOptions = {
      */
     async session({ session, token }: { session: any; token: any }) {
       session.accessToken = token.accessToken;
-      session.refreshToken = token.refreshToken;
+      session.refreshToken = token.refreshToken || session.refreshToken;
       // 이메일에 따라 role 부여
       if (session.user?.email === "mun05170@gmail.com") {
         session.user.role = "husband";
