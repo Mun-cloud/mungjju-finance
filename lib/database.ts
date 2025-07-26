@@ -20,7 +20,7 @@ function normalizeCategoryName(categoryName: string): string {
     "🍒용돈(쇼핑)": "용돈",
     "💪건강(운동)": "건강",
     "🐶가족": "가족",
-    "💌기타(경조사비)": "가족",
+    "💌기타(경조사비)": "기타",
     "💰여행": "여행",
   };
 
