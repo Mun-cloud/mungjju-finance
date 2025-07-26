@@ -12,14 +12,14 @@ const BUDGETS = [
   { category: "차량유지비", amount: 130000 },
   { category: "데이트", amount: 300000 },
   //   { category: "공과금", amount: 120000 },
-  { category: "용돈", amount: 350000 },
+  // { category: "용돈", amount: 350000 },
   { category: "건강", amount: 70000 },
   { category: "가족", amount: 100000 },
   { category: "보험", amount: 250000 },
   { category: "경조사", amount: 150000 },
   { category: "기타", amount: 435000 },
   // { category: "여행", amount: 200000 },
-  { category: "전체", amount: 2770000 },
+  { category: "전체", amount: 2420000 },
 ];
 
 function getCurrentMonth() {
@@ -45,7 +45,7 @@ export default function BudgetPage() {
       const recordMonth = `${recordDate.getFullYear()}-${String(
         recordDate.getMonth() + 1
       ).padStart(2, "0")}`;
-      if (recordMonth === selectedMonth) {
+      if (recordMonth === selectedMonth && record.category !== "용돈") {
         if (budgetCategories.includes(record.category)) {
           if (!result[record.category]) result[record.category] = 0;
           result[record.category] += record.amount;
