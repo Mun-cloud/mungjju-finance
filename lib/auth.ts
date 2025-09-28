@@ -2,6 +2,43 @@ import GoogleProvider from "next-auth/providers/google";
 import { getServerSession } from "next-auth/next";
 
 /**
+ * 만료된 액세스 토큰을 리프레시 토큰으로 갱신하는 함수
+ * @param token - 현재 JWT 토큰
+ * @returns 갱신된 토큰 또는 에러 정보가 포함된 토큰
+ */
+async function refreshAccessToken(token: any) {
+  try {
+    const url = "https://oauth2.googleapis.com/token";
+    const response = await fetch(url, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken,
+      }),
+      method: "POST",
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) {
+      throw refreshedTokens;
+    }
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    };
+  } catch (error) {
+    console.error("토큰 갱신 실패:", error);
+    return { ...token, error: "RefreshAccessTokenError" };
+  }
+}
+
+/**
  * NextAuth 설정
  *
  * 이 설정은 Google OAuth를 사용하여 사용자 인증을 처리합니다.
@@ -10,6 +47,12 @@ import { getServerSession } from "next-auth/next";
 export const authOptions = {
   // NextAuth 시크릿 키 (환경 변수에서 가져오거나 기본값 사용)
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-key",
+
+  // 세션 설정
+  session: {
+    strategy: "jwt" as const,
+    maxAge: 90 * 24 * 60 * 60, // 90일
+  },
 
   // 인증 제공자 설정
   providers: [
@@ -35,14 +78,24 @@ export const authOptions = {
      * JWT 토큰 생성/업데이트 콜백
      *
      * 사용자가 로그인할 때 액세스 토큰과 리프레시 토큰을 JWT에 저장합니다.
-     * 이 토큰들은 Google Drive API 호출에 사용됩니다.
+     * 토큰 만료 시 자동으로 갱신합니다.
      */
     async jwt({ token, account }: { token: any; account: any }) {
+      // 초기 로그인 시 토큰 정보 저장
       if (account) {
         token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token || token.refreshToken;
+        token.refreshToken = account.refresh_token;
+        token.accessTokenExpires = Date.now() + (account.expires_in || 3600) * 1000;
+        return token;
       }
-      return token;
+
+      // 토큰이 아직 유효한 경우 기존 토큰 반환
+      if (Date.now() < token.accessTokenExpires) {
+        return token;
+      }
+
+      // 토큰 만료 시 리프레시 토큰으로 갱신
+      return refreshAccessToken(token);
     },
 
     /**

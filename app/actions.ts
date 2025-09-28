@@ -51,6 +51,15 @@ export async function syncMyGoogleDriveAndSaveToDB() {
       fileData = await downloadFile(drive, file.id);
     } catch (error) {
       console.error("구글 드라이브 연동 중 오류 발생:", error);
+
+      // 토큰 관련 에러 처리
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('invalid_grant') ||
+          errorMessage.includes('Token has been expired') ||
+          errorMessage.includes('RefreshAccessTokenError')) {
+        throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      }
+
       throw new Error("구글 드라이브 연동 실패");
     }
 
