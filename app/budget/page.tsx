@@ -5,6 +5,10 @@ import { useSpendingStore } from "@/store/spendingStore";
 import { useState, useMemo } from "react";
 import SpendingDetailModal from "../charts/_components/SpendingDetailModal";
 import { Spending } from "@prisma/client";
+import MonthSelector from "./_components/MonthSelector";
+import BudgetTable from "./_components/BudgetTable";
+import MonthlyMemo from "./_components/MonthlyMemo";
+import { useMonthlyMemo } from "./_hooks/useMonthlyMemo";
 
 // 예산 항목과 금액(원하는 값으로 수정 가능)
 const BUDGETS = [
@@ -13,15 +17,15 @@ const BUDGETS = [
   { category: "생활비", amount: 750000 },
   { category: "차량유지비", amount: 130000 },
   { category: "데이트", amount: 300000 },
-  //   { category: "공과금", amount: 120000 },
-  // { category: "용돈", amount: 350000 },
   { category: "건강", amount: 70000 },
   { category: "가족", amount: 100000 },
   { category: "보험", amount: 250000 },
   { category: "경조사", amount: 150000 },
   { category: "기타", amount: 435000 },
-  // { category: "여행", amount: 200000 },
   { category: "전체", amount: 2420000 },
+  //{ category: "공과금", amount: 120000 },
+  //{ category: "용돈", amount: 350000 },
+  //{ category: "여행", amount: 200000 },
 ];
 
 function getCurrentMonth() {
@@ -33,8 +37,14 @@ export default function BudgetPage() {
   const total = useSpendingStore((state) => state.spendingList);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCategoryData, setSelectedCategoryData] = useState<Spending[]>([]);
+  const [selectedCategoryData, setSelectedCategoryData] = useState<Spending[]>(
+    []
+  );
   const [modalTitle, setModalTitle] = useState("");
+
+  // 메모 관련 로직을 커스텀 훅으로 분리
+  const { monthlyMemo, isSavingMemo, setMonthlyMemo, saveMonthlyMemo } =
+    useMonthlyMemo(selectedMonth);
 
   // 예산에 포함된 카테고리 목록(기타 제외)
   const budgetCategories = BUDGETS.filter((b) => b.category !== "기타").map(
@@ -92,25 +102,27 @@ export default function BudgetPage() {
     };
 
     let filteredData: Spending[];
-    
+
     if (category === "전체") {
       // 전체: 선택된 월의 모든 지출 (용돈 제외)
-      filteredData = total.filter(record => 
-        getRecordMonth(record) === selectedMonth && 
-        record.category !== "용돈"
+      filteredData = total.filter(
+        (record) =>
+          getRecordMonth(record) === selectedMonth && record.category !== "용돈"
       );
     } else if (category === "기타") {
       // 기타: 예산에 정의되지 않은 카테고리들
-      filteredData = total.filter(record => 
-        getRecordMonth(record) === selectedMonth && 
-        !budgetCategories.includes(record.category) &&
-        record.category !== "용돈"
+      filteredData = total.filter(
+        (record) =>
+          getRecordMonth(record) === selectedMonth &&
+          !budgetCategories.includes(record.category) &&
+          record.category !== "용돈"
       );
     } else {
       // 일반 카테고리: 해당 카테고리만
-      filteredData = total.filter(record => 
-        getRecordMonth(record) === selectedMonth && 
-        record.category === category
+      filteredData = total.filter(
+        (record) =>
+          getRecordMonth(record) === selectedMonth &&
+          record.category === category
       );
     }
 
@@ -122,74 +134,30 @@ export default function BudgetPage() {
 
   return (
     <Layout title="예산" showBackButton={true}>
-      <div className="mb-4 text-black">
-        <label className="text-sm font-medium text-gray-700 mr-2">
-          월 선택:
-        </label>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-2 py-1 border border-gray-300 rounded-md bg-white"
-        >
-          {monthOptions.map((month) => (
-            <option key={month} value={month}>
-              {month}
-            </option>
-          ))}
-        </select>
+      <div className="space-y-4">
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          monthOptions={monthOptions}
+          onMonthChange={setSelectedMonth}
+          totalSpentThisMonth={totalSpentThisMonth}
+        />
+
+        <BudgetTable
+          budgets={BUDGETS}
+          spendingByCategory={spendingByCategory}
+          totalSpentThisMonth={totalSpentThisMonth}
+          onRowClick={handleRowClick}
+        />
+
+        <MonthlyMemo
+          selectedMonth={selectedMonth}
+          monthlyMemo={monthlyMemo}
+          isSavingMemo={isSavingMemo}
+          onMemoChange={setMonthlyMemo}
+          onSaveMemo={saveMonthlyMemo}
+        />
       </div>
-      <div className="mb-2 text-right text-base font-bold text-gray-800">
-        이번달 총 지출: {totalSpentThisMonth.toLocaleString()}원
-      </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-black">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-2 text-left">항목</th>
-              <th className="px-4 py-2 text-right">예산</th>
-              <th className="px-4 py-2 text-right">현재 지출</th>
-              <th className="px-4 py-2 text-right">잔여 예산</th>
-            </tr>
-          </thead>
-          <tbody>
-            {BUDGETS.map(({ category, amount }) => {
-              // '전체' 카테고리일 때만 전체 합계 사용
-              const spent =
-                category === "전체"
-                  ? totalSpentThisMonth
-                  : spendingByCategory[category] || 0;
-              const remain = amount - spent;
-              return (
-                <tr 
-                  key={category}
-                  onClick={() => handleRowClick(category)}
-                  className="cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-3 py-3 font-medium">{category}</td>
-                  <td className="px-3 py-3 text-right">
-                    {amount.toLocaleString()}원
-                  </td>
-                  <td
-                    className={`px-3 py-3 text-right ${
-                      spent > amount ? "text-red-500 font-bold" : ""
-                    }`}
-                  >
-                    {spent.toLocaleString()}원
-                  </td>
-                  <td
-                    className={`px-3 py-3 text-right ${
-                      remain < 0 ? "text-red-500 font-bold" : ""
-                    }`}
-                  >
-                    {remain.toLocaleString()}원
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      
+
       <SpendingDetailModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -199,4 +167,3 @@ export default function BudgetPage() {
     </Layout>
   );
 }
-// ... existing code ...

@@ -25,3 +25,16 @@ model Spending {
   userEmail String
   role      String
 }
+
+model MonthlyMemo {
+  id        String   @id @default(uuid())
+  userEmail String
+  year      Int
+  month     Int      // 1-12
+  memo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userEmail, year, month])
+  @@map("monthly_memos")
+}
