@@ -6,12 +6,14 @@ interface SpendingFiltersState {
   // 상태
   selectedRole: string;
   selectedCategory: string;
+  searchQuery: string;
   expandedDates: Set<string>;
   spendingRecords: Spending[];
 
   // 액션
   setSelectedRole: (role: string) => void;
   setSelectedCategory: (category: string) => void;
+  setSearchQuery: (query: string) => void;
   setSpendingRecords: (records: Spending[]) => void;
   expandAll: () => void;
   collapseAll: () => void;
@@ -30,6 +32,7 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
     // 초기 상태
     selectedRole: "all",
     selectedCategory: "all",
+    searchQuery: "",
     expandedDates: new Set(),
     spendingRecords: [],
 
@@ -38,6 +41,8 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
 
     setSelectedCategory: (category: string) =>
       set({ selectedCategory: category }),
+
+    setSearchQuery: (query: string) => set({ searchQuery: query }),
 
     setSpendingRecords: (records: Spending[]) =>
       set({ spendingRecords: records }),
@@ -55,6 +60,7 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
       set({
         selectedRole: "all",
         selectedCategory: "all",
+        searchQuery: "",
       }),
 
     toggleDate: (date: string) => {
@@ -81,13 +87,24 @@ export const useSpendingFiltersStore = create<SpendingFiltersState>(
     },
 
     getFilteredRecords: () => {
-      const { spendingRecords, selectedRole, selectedCategory } = get();
+      const { spendingRecords, selectedRole, selectedCategory, searchQuery } = get();
       return spendingRecords.filter((record) => {
         const roleMatch =
           selectedRole === "all" || record.role === selectedRole;
         const categoryMatch =
           selectedCategory === "all" || record.category === selectedCategory;
-        return roleMatch && categoryMatch;
+        
+        // 검색어 필터링
+        const searchMatch = searchQuery === "" || [
+          record.where,
+          record.memo,
+          record.category,
+          record.subCategory
+        ].some(field => 
+          field?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        
+        return roleMatch && categoryMatch && searchMatch;
       });
     },
 

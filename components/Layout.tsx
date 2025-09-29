@@ -60,7 +60,7 @@ export default function Layout({
 
   return (
     <>
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 text-black">
         {/* 헤더 */}
         <Header
           title={title}
