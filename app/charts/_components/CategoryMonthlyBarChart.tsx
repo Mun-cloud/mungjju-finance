@@ -8,8 +8,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import React from "react";
+import React, { useState } from "react";
 import { useSpendingStore } from "@/store/spendingStore";
+import SpendingDetailModal from "./SpendingDetailModal";
+import { Spending } from "@prisma/client";
 
 const COLORS = [
   "#0088FE",
@@ -24,6 +26,9 @@ const COLORS = [
 
 export default function CategoryMonthlyBarChart() {
   const spendingList = useSpendingStore((state) => state.spendingList);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCategoryData, setSelectedCategoryData] = useState<Spending[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
   // 카테고리별 월별 비교 데이터 계산
   const categoryMonthlyData = spendingList
     .reduce((acc, record) => {
@@ -47,6 +52,23 @@ export default function CategoryMonthlyBarChart() {
     new Set(spendingList.map((r) => r.category || "기타"))
   );
   const topCategories = allCategories.slice(0, 4);
+
+  const handleBarClick = (data: any, category: string) => {
+    const month = data.month;
+    const categorySpending = spendingList.filter((record) => {
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      const recordCategory = record.category || "기타";
+      return monthKey === month && recordCategory === category;
+    });
+    
+    const [year, monthNum] = month.split("-");
+    setSelectedCategoryData(categorySpending);
+    setModalTitle(`${category} (${year}년 ${monthNum}월)`);
+    setModalOpen(true);
+  };
 
   if (categoryMonthlyData.length === 0) return null;
 
@@ -85,10 +107,19 @@ export default function CategoryMonthlyBarChart() {
               dataKey={category}
               fill={COLORS[index % COLORS.length]}
               stackId="a"
+              onClick={(data) => handleBarClick(data, category)}
+              style={{ cursor: "pointer" }}
             />
           ))}
         </BarChart>
       </ResponsiveContainer>
+      
+      <SpendingDetailModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+        spendingList={selectedCategoryData}
+      />
     </div>
   );
 }

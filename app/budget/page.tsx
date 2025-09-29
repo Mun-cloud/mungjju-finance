@@ -3,6 +3,8 @@
 import Layout from "@/components/Layout";
 import { useSpendingStore } from "@/store/spendingStore";
 import { useState, useMemo } from "react";
+import SpendingDetailModal from "../charts/_components/SpendingDetailModal";
+import { Spending } from "@prisma/client";
 
 // 예산 항목과 금액(원하는 값으로 수정 가능)
 const BUDGETS = [
@@ -30,6 +32,9 @@ function getCurrentMonth() {
 export default function BudgetPage() {
   const total = useSpendingStore((state) => state.spendingList);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCategoryData, setSelectedCategoryData] = useState<Spending[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
 
   // 예산에 포함된 카테고리 목록(기타 제외)
   const budgetCategories = BUDGETS.filter((b) => b.category !== "기타").map(
@@ -77,6 +82,44 @@ export default function BudgetPage() {
     return Object.values(spendingByCategory).reduce((sum, v) => sum + v, 0);
   }, [spendingByCategory]);
 
+  // 행 클릭 핸들러
+  const handleRowClick = (category: string) => {
+    const getRecordMonth = (record: Spending) => {
+      const recordDate = new Date(record.date);
+      return `${recordDate.getFullYear()}-${String(
+        recordDate.getMonth() + 1
+      ).padStart(2, "0")}`;
+    };
+
+    let filteredData: Spending[];
+    
+    if (category === "전체") {
+      // 전체: 선택된 월의 모든 지출 (용돈 제외)
+      filteredData = total.filter(record => 
+        getRecordMonth(record) === selectedMonth && 
+        record.category !== "용돈"
+      );
+    } else if (category === "기타") {
+      // 기타: 예산에 정의되지 않은 카테고리들
+      filteredData = total.filter(record => 
+        getRecordMonth(record) === selectedMonth && 
+        !budgetCategories.includes(record.category) &&
+        record.category !== "용돈"
+      );
+    } else {
+      // 일반 카테고리: 해당 카테고리만
+      filteredData = total.filter(record => 
+        getRecordMonth(record) === selectedMonth && 
+        record.category === category
+      );
+    }
+
+    setSelectedCategoryData(filteredData);
+    const [year, month] = selectedMonth.split("-");
+    setModalTitle(`${category} (${year}년 ${month}월)`);
+    setModalOpen(true);
+  };
+
   return (
     <Layout title="예산" showBackButton={true}>
       <div className="mb-4 text-black">
@@ -117,7 +160,11 @@ export default function BudgetPage() {
                   : spendingByCategory[category] || 0;
               const remain = amount - spent;
               return (
-                <tr key={category}>
+                <tr 
+                  key={category}
+                  onClick={() => handleRowClick(category)}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-3 py-3 font-medium">{category}</td>
                   <td className="px-3 py-3 text-right">
                     {amount.toLocaleString()}원
@@ -142,6 +189,13 @@ export default function BudgetPage() {
           </tbody>
         </table>
       </div>
+      
+      <SpendingDetailModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+        spendingList={selectedCategoryData}
+      />
     </Layout>
   );
 }

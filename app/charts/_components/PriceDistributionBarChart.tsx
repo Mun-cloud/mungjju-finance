@@ -7,8 +7,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import React from "react";
+import React, { useState } from "react";
 import { useSpendingStore } from "@/store/spendingStore";
+import SpendingDetailModal from "./SpendingDetailModal";
+import { Spending } from "@prisma/client";
 
 const priceRanges = [
   { range: "1만원 미만", min: 0, max: 10000 },
@@ -21,13 +23,27 @@ const priceRanges = [
 
 export default function PriceDistributionBarChart() {
   const spendingList = useSpendingStore((state) => state.spendingList);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPriceData, setSelectedPriceData] = useState<Spending[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
 
   const priceDistributionData = priceRanges.map((range) => ({
     range: range.range,
     count: spendingList.filter(
       (record) => record.amount >= range.min && record.amount < range.max
     ).length,
+    min: range.min,
+    max: range.max,
   }));
+
+  const handleBarClick = (data: any) => {
+    const priceRangeData = spendingList.filter(
+      (record) => record.amount >= data.min && record.amount < data.max
+    );
+    setSelectedPriceData(priceRangeData);
+    setModalTitle(`지출 금액 분포: ${data.range}`);
+    setModalOpen(true);
+  };
 
   if (spendingList.length === 0) return null;
 
@@ -45,9 +61,21 @@ export default function PriceDistributionBarChart() {
             formatter={(value: number) => [`${value}건`, "거래 수"]}
             labelFormatter={(label) => `금액대: ${label}`}
           />
-          <Bar dataKey="count" fill="#82CA9D" />
+          <Bar 
+            dataKey="count" 
+            fill="#82CA9D"
+            onClick={handleBarClick}
+            style={{ cursor: "pointer" }}
+          />
         </BarChart>
       </ResponsiveContainer>
+      
+      <SpendingDetailModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+        spendingList={selectedPriceData}
+      />
     </div>
   );
 }

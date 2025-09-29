@@ -2,6 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import React, { useMemo, useState } from "react";
 import { Spending } from "@prisma/client";
 import { useSpendingStore } from "@/store/spendingStore";
+import SpendingDetailModal from "./SpendingDetailModal";
 
 const COLORS = [
   "#0088FE",
@@ -41,6 +42,9 @@ export default function CategoryPieChart() {
       "0"
     )}`;
   });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCategoryData, setSelectedCategoryData] = useState<Spending[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
 
   const monthOptions = useMemo(
     () => getMonthOptions(spendingList),
@@ -71,6 +75,16 @@ export default function CategoryPieChart() {
       return acc;
     }, [] as { name: string; value: number }[])
     .sort((a, b) => b.value - a.value);
+
+  const handlePieClick = (data: any) => {
+    const categoryName = data.name;
+    const categorySpending = filteredRecords.filter(
+      (record) => (record.category || "기타") === categoryName
+    );
+    setSelectedCategoryData(categorySpending);
+    setModalTitle(`${categoryName} (${selectedMonth})`);
+    setModalOpen(true);
+  };
 
   if (categoryData.length === 0) {
     return (
@@ -128,6 +142,8 @@ export default function CategoryPieChart() {
             outerRadius={80}
             paddingAngle={2}
             dataKey="value"
+            onClick={handlePieClick}
+            style={{ cursor: "pointer" }}
           >
             {categoryData.map((entry, index) => (
               <Cell
@@ -161,6 +177,13 @@ export default function CategoryPieChart() {
           </div>
         ))}
       </div>
+      
+      <SpendingDetailModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+        spendingList={selectedCategoryData}
+      />
     </div>
   );
 }
