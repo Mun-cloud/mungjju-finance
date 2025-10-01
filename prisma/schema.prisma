@@ -35,6 +35,6 @@ model MonthlyMemo {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  @@unique([userEmail, year, month])
+  @@unique([userEmail, year, month], map: "userEmail_year_month")
   @@map("monthly_memos")
 }
