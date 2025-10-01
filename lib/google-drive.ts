@@ -11,6 +11,21 @@ export function createOAuth2Client(
   accessToken: string,
   refreshToken?: string
 ): OAuth2Client {
+  console.log("OAuth2Client 생성 중:", {
+    hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+    hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken
+  });
+
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    throw new Error("Google OAuth 환경변수가 누락되었습니다.");
+  }
+
+  if (!accessToken) {
+    throw new Error("액세스 토큰이 누락되었습니다.");
+  }
+
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
@@ -46,17 +61,28 @@ export async function getFolderIdByName(
   drive: any,
   folderName: string
 ): Promise<string> {
-  const { data } = await drive.files.list({
-    q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}' and trashed = false`,
-    fields: "files(id, name)",
-    pageSize: 1,
-  });
+  try {
+    console.log(`폴더 검색 시작: ${folderName}`);
+    
+    const { data } = await drive.files.list({
+      q: `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName}' and trashed = false`,
+      fields: "files(id, name)",
+      pageSize: 1,
+    });
 
-  const folder = data?.files?.[0];
-  if (!folder || !folder.id) {
-    throw new Error(`${folderName} 폴더를 찾을 수 없습니다.`);
+    console.log("폴더 검색 결과:", data?.files);
+
+    const folder = data?.files?.[0];
+    if (!folder || !folder.id) {
+      throw new Error(`${folderName} 폴더를 찾을 수 없습니다. 폴더명을 확인해주세요.`);
+    }
+    
+    console.log(`폴더 ID 찾기 완료: ${folder.id}`);
+    return folder.id;
+  } catch (error) {
+    console.error(`폴더 검색 실패 (${folderName}):`, error);
+    throw error;
   }
-  return folder.id;
 }
 
 /**
@@ -65,28 +91,40 @@ export async function getFolderIdByName(
  * @returns 최신 DB 파일 정보
  */
 export async function findLatestDbFile(drive: any) {
-  const targetFolderId = await getFolderIdByName(
-    drive,
-    process.env.GOOGLE_DRIVE_FOLDER_NAME!
-  );
+  try {
+    console.log("최신 DB 파일 검색 시작");
+    
+    const targetFolderId = await getFolderIdByName(
+      drive,
+      process.env.GOOGLE_DRIVE_FOLDER_NAME!
+    );
 
-  if (!targetFolderId) {
-    throw new Error("GOOGLE_DRIVE_FOLDER_ID 환경 변수가 설정되지 않았습니다.");
+    if (!targetFolderId) {
+      throw new Error("GOOGLE_DRIVE_FOLDER_ID 환경 변수가 설정되지 않았습니다.");
+    }
+
+    console.log(`대상 폴더 ID: ${targetFolderId}`);
+
+    const { data } = await drive.files.list({
+      pageSize: 10,
+      fields: "files(id, name, modifiedTime)",
+      orderBy: "modifiedTime desc",
+      q: `'${targetFolderId}' in parents and name contains 'clevmoney_' and trashed = false`,
+    });
+
+    console.log("DB 파일 검색 결과:", data?.files);
+
+    const latestFile = data?.files?.[0];
+    if (!latestFile || !latestFile.id) {
+      throw new Error("Google Drive에서 clevmoney_ 파일을 찾을 수 없습니다. 파일이 올바른 폴더에 있는지 확인해주세요.");
+    }
+
+    console.log(`최신 DB 파일 찾기 완료: ${latestFile.name} (${latestFile.id})`);
+    return latestFile;
+  } catch (error) {
+    console.error("최신 DB 파일 검색 실패:", error);
+    throw error;
   }
-
-  const { data } = await drive.files.list({
-    pageSize: 1,
-    fields: "files(id)",
-    orderBy: "modifiedTime desc",
-    q: `'${targetFolderId}' in parents and name contains 'clevmoney_' and trashed = false`,
-  });
-
-  const latestFile = data?.files?.[0];
-  if (!latestFile || !latestFile.id) {
-    throw new Error("Google Drive에서 clevmoney_ 파일을 찾을 수 없습니다.");
-  }
-
-  return latestFile;
 }
 
 /**

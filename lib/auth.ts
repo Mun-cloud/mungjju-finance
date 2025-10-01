@@ -67,6 +67,7 @@ export const authOptions = {
             "https://www.googleapis.com/auth/userinfo.email", // 사용자 이메일 정보
           ].join(" "),
           access_type: "offline", // 리프레시 토큰 요청
+          prompt: "consent", // 권한 재승인 강제 (refresh token을 확실히 받기 위해)
         },
       },
     }),
@@ -83,9 +84,20 @@ export const authOptions = {
     async jwt({ token, account }: { token: any; account: any }) {
       // 초기 로그인 시 토큰 정보 저장
       if (account) {
+        console.log("초기 로그인 - 토큰 정보:", {
+          hasAccessToken: !!account.access_token,
+          hasRefreshToken: !!account.refresh_token,
+          expiresIn: account.expires_in
+        });
+        
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.accessTokenExpires = Date.now() + (account.expires_in || 3600) * 1000;
+        
+        if (!account.refresh_token) {
+          console.warn("경고: Refresh token이 없습니다. 다시 로그인이 필요할 수 있습니다.");
+        }
+        
         return token;
       }
 
@@ -94,7 +106,14 @@ export const authOptions = {
         return token;
       }
 
+      // Refresh token이 없으면 재로그인 필요
+      if (!token.refreshToken) {
+        console.error("Refresh token이 없어 토큰 갱신 불가. 재로그인 필요.");
+        return { ...token, error: "RefreshTokenMissing" };
+      }
+
       // 토큰 만료 시 리프레시 토큰으로 갱신
+      console.log("토큰 갱신 시도 중...");
       return refreshAccessToken(token);
     },
 
